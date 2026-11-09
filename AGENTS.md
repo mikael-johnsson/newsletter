@@ -1,3 +1,11 @@
+## Project Configuration
+
+- **Language**: TypeScript
+- **Package Manager**: npm
+- **Add-ons**: none
+
+---
+
 # Newsletter: project rules
 
 Newsletter: SvelteKit 2 + TypeScript, pnpm, Tailwind. TODO: one line on what it does (sign-up page, editor, sending), the mail provider, and where it deploys.
