@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/lib/server/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Subscriber {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  unsubscribeToken String    @unique @default(cuid())
+  createdAt        DateTime  @default(now())
+  unsubscribedAt   DateTime?
+}
+
+enum NewsletterStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  SENT
+}
+
+model Newsletter {
+  id           String           @id @default(cuid())
+  subject      String
+  body         String
+  status       NewsletterStatus @default(DRAFT)
+  scheduledFor DateTime?
+  sentAt       DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([status, scheduledFor])
+}
