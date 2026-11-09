@@ -8,17 +8,17 @@
 
 # Newsletter: project rules
 
-Newsletter: SvelteKit 2 + TypeScript, pnpm, Tailwind. TODO: one line on what it does (sign-up page, editor, sending), the mail provider, and where it deploys.
+Newsletter: SvelteKit 2 + TypeScript, npm, Tailwind. TODO: one line on what it does (sign-up page, editor, sending), the mail provider, and where it deploys.
 
 ## Commands
 
-| Command        | Healthy result                                                          |
-| -------------- | ----------------------------------------------------------------------- |
-| `pnpm install` | No errors                                                               |
-| `pnpm dev`     | App on localhost:5173                                                   |
-| `pnpm test`    | `Test Files  N passed`, no `FAIL` lines                                 |
-| `pnpm check`   | `svelte-check found 0 errors and 0 warnings`                            |
-| `pnpm lint`    | Prettier "All matched files use Prettier code style!", no ESLint output |
+| Command       | Healthy result                                                          |
+| ------------- | ----------------------------------------------------------------------- |
+| `npm install` | No errors                                                               |
+| `npm dev`     | App on localhost:5173                                                   |
+| `npm test`    | `Test Files  N passed`, no `FAIL` lines                                 |
+| `npm check`   | `svelte-check found 0 errors and 0 warnings`                            |
+| `npm lint`    | Prettier "All matched files use Prettier code style!", no ESLint output |
 
 ## Layout
 
@@ -38,12 +38,12 @@ Newsletter: SvelteKit 2 + TypeScript, pnpm, Tailwind. TODO: one line on what it 
 
 - `.env*` files: never read or edit them; change `.env.example` instead
 - Real subscribers: never send real email or touch the production subscriber list
-- `pnpm-lock.yaml`: never edit it by hand; use `pnpm`
+- `package-lock.yaml`: never edit it by hand; use `npm`
 
 ## Working
 
 - Propose a plan and wait for approval before editing more than one file
-- Before reporting a task done, run `pnpm lint`, `pnpm test` and `pnpm check`, and paste the result. If something fails, fix the code, not the test
+- Before reporting a task done, run `npm lint`, `npm test` and `npm check`, and paste the result. If something fails, fix the code, not the test
 
 ## Git
 
