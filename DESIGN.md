@@ -3,12 +3,12 @@ version: alpha
 name: Newsletter
 description: Starter tokens, bold and playful. Placeholders until a designer sets them.
 colors:
-  primary: "#FF4D2E"
-  secondary: "#2B2BFF"
-  accent: "#FFD23F"
-  ink: "#141414"
-  paper: "#FFF8EE"
-  muted: "#6B6459"
+  primary: '#FF4D2E'
+  secondary: '#2B2BFF'
+  accent: '#FFD23F'
+  ink: '#141414'
+  paper: '#FFF8EE'
+  muted: '#6B6459'
 typography:
   display:
     fontFamily: Bricolage Grotesque
@@ -37,21 +37,21 @@ spacing:
   xl: 64px
 components:
   button-primary:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.ink}"
-    typography: "{typography.h2}"
-    rounded: "{rounded.pill}"
+    backgroundColor: '{colors.primary}'
+    textColor: '{colors.ink}'
+    typography: '{typography.h2}'
+    rounded: '{rounded.pill}'
     padding: 16px
   page:
-    backgroundColor: "{colors.paper}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body}"
+    backgroundColor: '{colors.paper}'
+    textColor: '{colors.ink}'
+    typography: '{typography.body}'
   highlight:
-    backgroundColor: "{colors.accent}"
-    textColor: "{colors.ink}"
+    backgroundColor: '{colors.accent}'
+    textColor: '{colors.ink}'
   caption:
-    backgroundColor: "{colors.paper}"
-    textColor: "{colors.muted}"
+    backgroundColor: '{colors.paper}'
+    textColor: '{colors.muted}'
 ---
 
 ## Overview
