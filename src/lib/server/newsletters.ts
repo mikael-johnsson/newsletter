@@ -1,5 +1,6 @@
 import { db } from './db.ts';
 import { jobAdEntry } from './entries.ts';
+import type { OwnPost } from './own-post.ts';
 import { getJobAd } from './platsbanken.ts';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -33,6 +34,10 @@ export async function getCurrentDraft(now = new Date()) {
 
 export type Draft = Awaited<ReturnType<typeof getCurrentDraft>>;
 
+function nextPosition(draft: Draft): number {
+	return (draft.entries.at(-1)?.position ?? -1) + 1;
+}
+
 export type AddJobAdResult = 'added' | 'duplicate' | 'not-found';
 
 export async function addJobAdToDraft(platsbankenId: string): Promise<AddJobAdResult> {
@@ -44,12 +49,30 @@ export async function addJobAdToDraft(platsbankenId: string): Promise<AddJobAdRe
 	const job = await getJobAd(platsbankenId);
 	if (!job) return 'not-found';
 
-	const position = (draft.entries.at(-1)?.position ?? -1) + 1;
 	await db.newsletter.update({
 		where: { id: draft.id },
-		data: { entries: { create: jobAdEntry(job, position) } }
+		data: { entries: { create: jobAdEntry(job, nextPosition(draft)) } }
 	});
 	return 'added';
+}
+
+export async function addOwnPostToDraft(post: OwnPost): Promise<void> {
+	const draft = await getCurrentDraft();
+	await db.newsletter.update({
+		where: { id: draft.id },
+		data: {
+			entries: {
+				create: {
+					type: 'FREEHAND',
+					position: nextPosition(draft),
+					title: post.title,
+					link: post.url,
+					summary: post.text,
+					source: 'Eget inlägg'
+				}
+			}
+		}
+	});
 }
 
 export async function removeEntryFromDraft(entryId: string): Promise<boolean> {

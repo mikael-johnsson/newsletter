@@ -50,7 +50,7 @@ model Entry {
   type         EntryType
   position     Int
   title        String
-  link         String
+  link         String?
   summary      String
   source       String
   jobAd        JobAd?

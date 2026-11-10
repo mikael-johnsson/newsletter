@@ -3,6 +3,7 @@ import { db } from './db.ts';
 import { getJobAd, type JobAd } from './platsbanken.ts';
 import {
 	addJobAdToDraft,
+	addOwnPostToDraft,
 	draftSubject,
 	getCurrentDraft,
 	isoWeek,
@@ -118,6 +119,25 @@ describe('addJobAdToDraft', () => {
 
 		expect(await addJobAdToDraft('1')).toBe('not-found');
 		expect(update).not.toHaveBeenCalled();
+	});
+});
+
+describe('addOwnPostToDraft', () => {
+	it('adds an own post last as a free-hand entry', async () => {
+		findFirst.mockResolvedValue(draft([{ position: 0 }]));
+
+		await addOwnPostToDraft({ title: 'Veckans tips', url: null, text: 'Hej!' });
+
+		expect(update.mock.calls[0][0].data.entries).toEqual({
+			create: {
+				type: 'FREEHAND',
+				position: 1,
+				title: 'Veckans tips',
+				link: null,
+				summary: 'Hej!',
+				source: 'Eget inlägg'
+			}
+		});
 	});
 });
 

@@ -3,6 +3,7 @@
 	import { enhance } from '$app/forms';
 	import CurrentNewsletter from '#lib/components/CurrentNewsletter.svelte';
 	import JobCard from '#lib/components/JobCard.svelte';
+	import OwnPostForm from '#lib/components/OwnPostForm.svelte';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -11,10 +12,11 @@
 		new Set(data.draft.entries.flatMap((entry) => entry.jobAd?.platsbankenId ?? []))
 	);
 
-	type Tab = 'jobs' | 'articles';
+	type Tab = 'jobs' | 'articles' | 'own';
 	const tabs: { id: Tab; label: string }[] = [
 		{ id: 'jobs', label: 'Jobb' },
-		{ id: 'articles', label: 'Artiklar' }
+		{ id: 'articles', label: 'Artiklar' },
+		{ id: 'own', label: 'Eget inlägg' }
 	];
 
 	let tab = $state<Tab>('jobs');
@@ -50,7 +52,7 @@
 				<p role="alert" class="mb-8 font-bold">{form.addError ?? form.removeError}</p>
 			{/if}
 
-			<div role="tablist" aria-label="Innehåll" class="flex gap-2">
+			<div role="tablist" aria-label="Innehåll" class="flex flex-wrap gap-2">
 				{#each tabs as { id, label } (id)}
 					<button
 						type="button"
@@ -99,6 +101,16 @@
 				class="mt-8"
 			>
 				<p role="status">No articles found</p>
+			</div>
+
+			<div
+				id="panel-own"
+				role="tabpanel"
+				aria-labelledby="tab-own"
+				hidden={tab !== 'own'}
+				class="mt-8"
+			>
+				<OwnPostForm values={form?.ownPost?.values} errors={form?.ownPost?.errors} />
 			</div>
 		</section>
 	</section>

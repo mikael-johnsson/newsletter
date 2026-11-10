@@ -29,7 +29,7 @@ describe('admin content tabs', () => {
 		const screen = await render(Page, props);
 
 		await expect
-			.element(screen.getByRole('tab', { name: 'Jobs' }))
+			.element(screen.getByRole('tab', { name: 'Jobb' }))
 			.toHaveAttribute('aria-selected', 'true');
 		await expect.element(screen.getByRole('link', { name: 'Frontendutvecklare' })).toBeVisible();
 	});
@@ -37,7 +37,7 @@ describe('admin content tabs', () => {
 	it('switches to articles and hides the job ads', async () => {
 		const screen = await render(Page, props);
 
-		await screen.getByRole('tab', { name: 'Articles' }).click();
+		await screen.getByRole('tab', { name: 'Artiklar' }).click();
 
 		await expect.element(screen.getByText('No articles found')).toBeVisible();
 		await expect
@@ -47,12 +47,24 @@ describe('admin content tabs', () => {
 
 	it('moves between tabs with the arrow keys', async () => {
 		const screen = await render(Page, props);
-		const articles = screen.getByRole('tab', { name: 'Articles' });
+		const articles = screen.getByRole('tab', { name: 'Artiklar' });
 
-		(screen.getByRole('tab', { name: 'Jobs' }).element() as HTMLElement).focus();
+		(screen.getByRole('tab', { name: 'Jobb' }).element() as HTMLElement).focus();
 		await userEvent.keyboard('{ArrowRight}');
 
 		await expect.element(articles).toHaveAttribute('aria-selected', 'true');
 		await expect.element(articles).toHaveFocus();
+	});
+
+	it('wraps around from the first tab to Eget inlägg', async () => {
+		const screen = await render(Page, props);
+
+		(screen.getByRole('tab', { name: 'Jobb' }).element() as HTMLElement).focus();
+		await userEvent.keyboard('{ArrowLeft}');
+
+		await expect
+			.element(screen.getByRole('tab', { name: 'Eget inlägg' }))
+			.toHaveAttribute('aria-selected', 'true');
+		await expect.element(screen.getByLabelText('Titel')).toBeVisible();
 	});
 });

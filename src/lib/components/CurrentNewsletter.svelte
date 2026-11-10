@@ -19,16 +19,20 @@
 				<li class="flex items-start justify-between gap-4">
 					<div class="flex flex-col gap-2">
 						<h3 class="font-bold">
-							<a
-								href={entry.link}
-								rel="external noopener"
-								target="_blank"
-								class="underline-offset-4 hover:underline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink"
-							>
+							{#if entry.link}
+								<a
+									href={entry.link}
+									rel="external noopener"
+									target="_blank"
+									class="underline-offset-4 hover:underline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink"
+								>
+									{entry.title}
+								</a>
+							{:else}
 								{entry.title}
-							</a>
+							{/if}
 						</h3>
-						<p>{entry.summary}</p>
+						<p class="whitespace-pre-line">{entry.summary}</p>
 						<p class="text-muted">{entry.source}</p>
 					</div>
 

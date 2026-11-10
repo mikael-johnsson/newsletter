@@ -1,6 +1,12 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { SESSION_COOKIE } from '#lib/server/session.ts';
-import { addJobAdToDraft, getCurrentDraft, removeEntryFromDraft } from '#lib/server/newsletters.ts';
+import {
+	addJobAdToDraft,
+	addOwnPostToDraft,
+	getCurrentDraft,
+	removeEntryFromDraft
+} from '#lib/server/newsletters.ts';
+import { parseOwnPost } from '#lib/server/own-post.ts';
 import { searchJobAds, type JobAd } from '#lib/server/platsbanken.ts';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -38,6 +44,24 @@ export const actions = {
 		} catch (error) {
 			console.error('[newsletter] Adding job ad failed', error);
 			return fail(502, { addError: 'Kunde inte lägga till annonsen. Försök igen.' });
+		}
+	},
+
+	addOwnPost: async ({ request }) => {
+		const parsed = parseOwnPost(await request.formData());
+		if (!('post' in parsed)) return fail(400, { ownPost: parsed });
+
+		try {
+			await addOwnPostToDraft(parsed.post);
+		} catch (error) {
+			console.error('[newsletter] Adding own post failed', error);
+			const { title, url, text } = parsed.post;
+			return fail(502, {
+				ownPost: {
+					values: { title, url: url ?? '', text },
+					errors: { form: 'Kunde inte lägga till inlägget. Försök igen.' }
+				}
+			});
 		}
 	},
 
