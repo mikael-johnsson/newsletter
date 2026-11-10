@@ -1,4 +1,4 @@
-import { redirect } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import { SESSION_COOKIE } from '#lib/server/session.ts';
 import type { Actions } from './$types';
 import { searchJobAds } from '#lib/server/platsbanken.ts';
@@ -10,7 +10,11 @@ export const actions = {
 	},
 
 	fetchJobs: async () => {
-		const jobs = await searchJobAds();
-		jobs.forEach((j) => console.log('Job: ', j));
+		try {
+			return { jobs: await searchJobAds() };
+		} catch (error) {
+			console.error('[jobs] Platsbanken search failed', error);
+			return fail(502, { jobsError: 'Kunde inte hämta jobb från Platsbanken. Försök igen.' });
+		}
 	}
 } satisfies Actions;
