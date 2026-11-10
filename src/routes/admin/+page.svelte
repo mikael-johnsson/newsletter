@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
 	import CurrentNewsletter from '#lib/components/CurrentNewsletter.svelte';
 	import JobCard from '#lib/components/JobCard.svelte';
@@ -9,6 +10,24 @@
 	const addedIds = $derived(
 		new Set(data.draft.entries.flatMap((entry) => entry.jobAd?.platsbankenId ?? []))
 	);
+
+	type Tab = 'jobs' | 'articles';
+	const tabs: { id: Tab; label: string }[] = [
+		{ id: 'jobs', label: 'Jobb' },
+		{ id: 'articles', label: 'Artiklar' }
+	];
+
+	let tab = $state<Tab>('jobs');
+
+	async function moveTab(event: KeyboardEvent) {
+		if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+		event.preventDefault();
+		const step = event.key === 'ArrowRight' ? 1 : -1;
+		const index = tabs.findIndex(({ id }) => id === tab);
+		tab = tabs[(index + step + tabs.length) % tabs.length].id;
+		await tick();
+		document.getElementById(`tab-${tab}`)?.focus();
+	}
 </script>
 
 <header class="flex justify-end p-4 sm:p-8">
@@ -23,7 +42,6 @@
 
 <main class="mx-auto px-4 py-16">
 	<h1 class="font-display text-h2 sm:text-display">Admin</h1>
-	<p class="mt-8 text-body">You're logged in. Issues and subscribers will live here.</p>
 	<section class="mt-16 grid grid-cols-1 gap-16 sm:grid-cols-2">
 		<CurrentNewsletter newsletter={data.draft} />
 
@@ -32,17 +50,56 @@
 				<p role="alert" class="mb-8 font-bold">{form.addError ?? form.removeError}</p>
 			{/if}
 
-			{#if data.jobsError}
-				<p role="alert" class="font-bold">{data.jobsError}</p>
-			{:else if data.jobs.length === 0}
-				<p role="status">Inga annonser hittades.</p>
-			{:else}
-				<ul class="flex flex-col gap-4">
-					{#each data.jobs as job (job.id)}
-						<li><JobCard {job} added={addedIds.has(job.id)} /></li>
-					{/each}
-				</ul>
-			{/if}
+			<div role="tablist" aria-label="Innehåll" class="flex gap-2">
+				{#each tabs as { id, label } (id)}
+					<button
+						type="button"
+						role="tab"
+						id="tab-{id}"
+						aria-selected={tab === id}
+						aria-controls="panel-{id}"
+						tabindex={tab === id ? 0 : -1}
+						onclick={() => (tab = id)}
+						onkeydown={moveTab}
+						class={[
+							'rounded-pill px-6 py-2 font-display text-h2 focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink',
+							tab === id ? 'bg-ink text-paper' : 'bg-ink/5 text-ink'
+						]}
+					>
+						{label}
+					</button>
+				{/each}
+			</div>
+
+			<div
+				id="panel-jobs"
+				role="tabpanel"
+				aria-labelledby="tab-jobs"
+				hidden={tab !== 'jobs'}
+				class="mt-8"
+			>
+				{#if data.jobsError}
+					<p role="alert" class="font-bold">{data.jobsError}</p>
+				{:else if data.jobs.length === 0}
+					<p role="status">Inga annonser hittades.</p>
+				{:else}
+					<ul class="flex flex-col gap-4">
+						{#each data.jobs as job (job.id)}
+							<li><JobCard {job} added={addedIds.has(job.id)} /></li>
+						{/each}
+					</ul>
+				{/if}
+			</div>
+
+			<div
+				id="panel-articles"
+				role="tabpanel"
+				aria-labelledby="tab-articles"
+				hidden={tab !== 'articles'}
+				class="mt-8"
+			>
+				<p role="status">No articles found</p>
+			</div>
 		</section>
 	</section>
 </main>
