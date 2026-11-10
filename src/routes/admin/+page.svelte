@@ -15,4 +15,12 @@
 <main class="mx-auto max-w-prose px-4 py-16">
 	<h1 class="font-display text-h2 sm:text-display">Admin</h1>
 	<p class="mt-8 text-body">You're logged in. Issues and subscribers will live here.</p>
+
+	<form method="POST" action="?/fetchJobs" use:enhance class="mt-8">
+		<button
+			class="rounded-pill bg-primary px-6 py-2 font-display text-h2 text-ink focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink sm:p-4"
+		>
+			Hämta jobb
+		</button>
+	</form>
 </main>
