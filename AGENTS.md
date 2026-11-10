@@ -8,22 +8,26 @@
 
 # Newsletter: project rules
 
-Newsletter: SvelteKit 2 + TypeScript, npm, Tailwind. TODO: one line on what it does (sign-up page, editor, sending), the mail provider, and where it deploys.
+Juniorens nyhetsbrev: SvelteKit 3 + TypeScript, npm, Tailwind, Prisma on Neon Postgres, deployed to Vercel. A weekly newsletter for juniors: readers sign up on a public page (double opt-in), and the author builds each issue on `/admin` from job ads (Platsbanken, via the JobTech API), articles (source not chosen yet) and own posts. The mail provider is not chosen yet, so `mail.ts` only logs.
 
 ## Commands
 
-| Command       | Healthy result                                                          |
-| ------------- | ----------------------------------------------------------------------- |
-| `npm install` | No errors                                                               |
-| `npm dev`     | App on localhost:5173                                                   |
-| `npm test`    | `Test Files  N passed`, no `FAIL` lines                                 |
-| `npm check`   | `svelte-check found 0 errors and 0 warnings`                            |
-| `npm lint`    | Prettier "All matched files use Prettier code style!", no ESLint output |
+| Command               | Healthy result                                                                  |
+| --------------------- | ------------------------------------------------------------------------------- |
+| `npm install`         | No errors                                                                       |
+| `npm run dev`         | App on localhost:5173                                                           |
+| `npm test`            | `Test Files  N passed`, no `FAIL` lines                                         |
+| `npm run check`       | `svelte-check found 0 errors and 0 warnings`                                    |
+| `npm run lint`        | Prettier "All matched files use Prettier code style!", no ESLint output         |
+| `npm run db:generate` | Regenerates the Prisma client in `src/lib/server/prisma/` after a schema change |
+
+Component tests (`*.svelte.spec.ts`) run in Chromium; run `npx playwright install chromium` once per machine.
 
 ## Layout
 
-- `src/lib/components/`: UI components. `src/lib/server/`: server-only code (DB, mail provider)
+- `src/lib/components/`: UI components. `src/lib/server/`: server-only code (DB, mail, JobTech API, newsletter rules)
 - `src/routes/`: pages and endpoints
+- `prisma/schema.prisma` and `prisma/migrations/`: data model and migrations
 
 ## Conventions
 
@@ -38,12 +42,13 @@ Newsletter: SvelteKit 2 + TypeScript, npm, Tailwind. TODO: one line on what it d
 
 - `.env*` files: never read or edit them; change `.env.example` instead
 - Real subscribers: never send real email or touch the production subscriber list
-- `package-lock.yaml`: never edit it by hand; use `npm`
+- `package-lock.json`: never edit it by hand; use `npm`
+- The database: never run `db:migrate` or `db:deploy`. Write the migration SQL offline (`npx prisma migrate diff --from-schema <old> --to-schema prisma/schema.prisma --script`) into a new `prisma/migrations/<timestamp>_<name>/` folder, and leave applying it to the author
 
 ## Working
 
 - Propose a plan and wait for approval before editing more than one file
-- Before reporting a task done, run `npm lint`, `npm test` and `npm check`, and paste the result. If something fails, fix the code, not the test
+- Before reporting a task done, run `npm run lint`, `npm test` and `npm run check`, and paste the result. If something fails, fix the code, not the test
 
 ## Git
 
