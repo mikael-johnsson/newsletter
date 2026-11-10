@@ -17,11 +17,17 @@
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
 		"test:unit": "vitest",
-		"test": "npm run test:unit -- --run"
+		"test": "npm run test:unit -- --run",
+		"postinstall": "prisma generate",
+		"db:generate": "prisma generate",
+		"db:migrate": "prisma migrate dev",
+		"db:deploy": "prisma migrate deploy",
+		"db:studio": "prisma studio",
+		"admin:hash": "node scripts/hash-password.ts"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
-		"@sveltejs/adapter-auto": "^8.0.0",
+		"@sveltejs/adapter-vercel": "^7.0.2",
 		"@sveltejs/kit": "^3.0.0",
 		"@sveltejs/vite-plugin-svelte": "^7.2.0",
 		"@tailwindcss/forms": "^0.5.11",
@@ -37,6 +43,7 @@
 		"prettier": "^3.8.3",
 		"prettier-plugin-svelte": "^4.1.0",
 		"prettier-plugin-tailwindcss": "^0.8.0",
+		"prisma": "^7.10.1",
 		"svelte": "^5.57.2",
 		"svelte-check": "^4.6.0",
 		"tailwindcss": "^4.3.0",
@@ -45,5 +52,11 @@
 		"vite": "^8.3.0",
 		"vitest": "^4.1.8",
 		"vitest-browser-svelte": "^2.1.1"
+	},
+	"dependencies": {
+		"@fontsource-variable/bricolage-grotesque": "^5.3.0",
+		"@fontsource-variable/inter": "^5.3.0",
+		"@prisma/adapter-neon": "^7.10.1",
+		"@prisma/client": "^7.10.1"
 	}
 }

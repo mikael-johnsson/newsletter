@@ -21,3 +21,9 @@ Thumbs.db
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Prisma generated client
+/src/lib/server/prisma
+
+# Docs
+ARCHITECTURE.md
