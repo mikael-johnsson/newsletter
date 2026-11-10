@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { buildSearchUrl, parseSearchResponse, searchJobAds } from './platsbanken.ts';
+import { buildSearchUrl, getJobAd, parseSearchResponse, searchJobAds } from './platsbanken.ts';
 
 const hit = {
 	id: '31684195',
@@ -87,5 +87,24 @@ describe('searchJobAds', () => {
 		stubFetch(new Response('Service Unavailable', { status: 503 }));
 
 		await expect(searchJobAds()).rejects.toThrow(/status 503/);
+	});
+});
+
+describe('getJobAd', () => {
+	it('looks up one ad by its Platsbanken id', async () => {
+		const fetchMock = stubFetch(Response.json(hit));
+
+		const ad = await getJobAd('31684195');
+
+		expect(fetchMock.mock.calls[0][0].toString()).toBe(
+			'https://jobsearch.api.jobtechdev.se/ad/31684195'
+		);
+		expect(ad).toMatchObject({ id: '31684195', title: 'Frontendutvecklare' });
+	});
+
+	it('returns null for an ad that no longer exists', async () => {
+		stubFetch(new Response('Not found', { status: 404 }));
+
+		expect(await getJobAd('1')).toBeNull();
 	});
 });

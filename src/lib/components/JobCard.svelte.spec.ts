@@ -29,6 +29,23 @@ describe('JobCard', () => {
 		await expect.element(screen.getByText('4 nov.')).toBeInTheDocument();
 	});
 
+	it('offers to add an ad that is not in the newsletter yet', async () => {
+		const screen = await render(JobCard, { job });
+
+		await expect
+			.element(screen.getByRole('button', { name: 'Lägg till i nyhetsbrev' }))
+			.toBeEnabled();
+	});
+
+	it('cannot add an ad that is already in the newsletter', async () => {
+		const screen = await render(JobCard, { job, added: true });
+
+		await expect
+			.element(screen.getByRole('button', { name: 'Tillagd i nyhetsbrevet' }))
+			.toBeDisabled();
+		expect(screen.container.querySelector('form')).toBeNull();
+	});
+
 	it('leaves out details the ad does not have', async () => {
 		const screen = await render(JobCard, {
 			job: { ...job, employer: '', occupation: '', applicationDeadline: '' }

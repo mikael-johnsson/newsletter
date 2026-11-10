@@ -1,7 +1,10 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import type { JobAd } from '#lib/server/platsbanken.ts';
 
-	let { job }: { job: JobAd } = $props();
+	let { job, added = false }: { job: JobAd; added?: boolean } = $props();
+
+	let adding = $state(false);
 
 	const dateFormat = new Intl.DateTimeFormat('sv-SE', {
 		day: 'numeric',
@@ -52,12 +55,35 @@
 		{/if}
 	</div>
 
-	<button
-		type="button"
-		disabled
-		aria-label="Lägg till i nyhetsbrev"
-		class="shrink-0 rounded-pill bg-accent px-4 py-2 font-display text-h2 text-ink disabled:opacity-50"
-	>
-		+
-	</button>
+	{#if added}
+		<button
+			type="button"
+			disabled
+			aria-label="Tillagd i nyhetsbrevet"
+			class="shrink-0 rounded-pill bg-accent px-4 py-2 font-display text-h2 text-ink opacity-50"
+		>
+			✓
+		</button>
+	{:else}
+		<form
+			method="POST"
+			action="?/addJob"
+			use:enhance={() => {
+				adding = true;
+				return async ({ update }) => {
+					await update();
+					adding = false;
+				};
+			}}
+		>
+			<input type="hidden" name="platsbankenId" value={job.id} />
+			<button
+				disabled={adding}
+				aria-label="Lägg till i nyhetsbrev"
+				class="shrink-0 rounded-pill bg-accent px-4 py-2 font-display text-h2 text-ink focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink disabled:opacity-50"
+			>
+				+
+			</button>
+		</form>
+	{/if}
 </article>
