@@ -11,6 +11,8 @@ model Subscriber {
   id               String    @id @default(cuid())
   email            String    @unique
   unsubscribeToken String    @unique @default(cuid())
+  confirmToken     String?   @unique
+  confirmedAt      DateTime?
   createdAt        DateTime  @default(now())
   unsubscribedAt   DateTime?
 }
