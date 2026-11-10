@@ -19,26 +19,31 @@
 <main class="mx-auto max-w-prose px-4 py-16">
 	<h1 class="font-display text-h2 sm:text-display">Admin</h1>
 	<p class="mt-8 text-body">You're logged in. Issues and subscribers will live here.</p>
+	<section class="mt-16 grid grid-cols-1 gap-16 sm:grid-cols-2">
+		<div class="border border-amber-600">Container for newsletter</div>
 
-	<form method="POST" action="?/fetchJobs" use:enhance class="mt-8">
-		<button
-			class="rounded-pill bg-primary px-6 py-2 font-display text-h2 text-ink focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink sm:p-4"
-		>
-			Hämta jobb
-		</button>
-	</form>
+		<div>
+			<form method="POST" action="?/fetchJobs" use:enhance class="mt-8">
+				<button
+					class="rounded-pill bg-primary px-6 py-2 font-display text-h2 text-ink focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink sm:p-4"
+				>
+					Hämta jobb
+				</button>
+			</form>
 
-	{#if form?.jobsError}
-		<p role="alert" class="mt-8 font-bold">{form.jobsError}</p>
-	{:else if form?.jobs}
-		{#if form.jobs.length === 0}
-			<p role="status" class="mt-8">Inga annonser hittades.</p>
-		{:else}
-			<ul class="mt-8 flex flex-col gap-4">
-				{#each form.jobs as job (job.id)}
-					<li><JobCard {job} /></li>
-				{/each}
-			</ul>
-		{/if}
-	{/if}
+			{#if form?.jobsError}
+				<p role="alert" class="mt-8 font-bold">{form.jobsError}</p>
+			{:else if form?.jobs}
+				{#if form.jobs.length === 0}
+					<p role="status" class="mt-8">Inga annonser hittades.</p>
+				{:else}
+					<ul class="mt-8 flex flex-col gap-4">
+						{#each form.jobs as job (job.id)}
+							<li><JobCard {job} /></li>
+						{/each}
+					</ul>
+				{/if}
+			{/if}
+		</div>
+	</section>
 </main>

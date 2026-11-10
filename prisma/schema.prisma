@@ -27,12 +27,48 @@ enum NewsletterStatus {
 model Newsletter {
   id           String           @id @default(cuid())
   subject      String
-  body         String
   status       NewsletterStatus @default(DRAFT)
   scheduledFor DateTime?
   sentAt       DateTime?
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
+  entries      Entry[]
 
   @@index([status, scheduledFor])
+}
+
+enum EntryType {
+  AD
+  ARTICLE
+  FREEHAND
+}
+
+model Entry {
+  id           String     @id @default(cuid())
+  newsletterId String
+  newsletter   Newsletter @relation(fields: [newsletterId], references: [id], onDelete: Cascade)
+  type         EntryType
+  position     Int
+  title        String
+  link         String
+  summary      String
+  source       String
+  jobAd        JobAd?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([newsletterId, position])
+}
+
+// Dates are Swedish local time without a zone, exactly as Platsbanken returns them
+model JobAd {
+  id                  String @id @default(cuid())
+  entryId             String @unique
+  entry               Entry  @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  platsbankenId       String
+  employer            String
+  location            String
+  occupation          String
+  publishedAt         String
+  applicationDeadline String
 }
