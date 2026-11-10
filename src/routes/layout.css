@@ -1,3 +1,37 @@
 @import 'tailwindcss';
+@import '@fontsource-variable/bricolage-grotesque';
+@import '@fontsource-variable/inter';
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
+
+@theme {
+	--color-primary: #ff4d2e;
+	--color-secondary: #2b2bff;
+	--color-accent: #ffd23f;
+	--color-ink: #141414;
+	--color-paper: #fff8ee;
+	--color-muted: #6b6459;
+
+	--font-display: 'Bricolage Grotesque Variable', sans-serif;
+	--font-sans: 'Inter Variable', sans-serif;
+
+	--text-display: 64px;
+	--text-display--line-height: 1;
+	--text-display--letter-spacing: -0.03em;
+	--text-display--font-weight: 800;
+	--text-h2: 32px;
+	--text-h2--line-height: 1.1;
+	--text-h2--font-weight: 700;
+	--text-body: 18px;
+	--text-body--line-height: 1.6;
+
+	--radius-sm: 8px;
+	--radius-md: 16px;
+	--radius-pill: 999px;
+}
+
+@layer base {
+	body {
+		@apply bg-paper font-sans text-body text-ink;
+	}
+}

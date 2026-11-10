@@ -30,7 +30,7 @@ Newsletter: SvelteKit 2 + TypeScript, npm, Tailwind. TODO: one line on what it d
 - Svelte 5 runes (`$state`, `$derived`, `$props`); no `export let`, no stores for local state
 - Prefer SvelteKit form actions with progressive enhancement (`use:enhance`) over client-side `fetch`
 - Use Tailwind theme tokens and `DESIGN.md`, never arbitrary values
-- Secrets come from `$env/static/private` or `$env/dynamic/private`, only in `src/lib/server/` or `+*.server.ts`
+- Secrets come from `$app/env/private`, only in `src/lib/server/` or `+*.server.ts`
 - Keep comments minimal; write self-explanatory code and comment only where the code cannot tell the story
 - Test the business rule or bug the task is about, not for coverage
 
