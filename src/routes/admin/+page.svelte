@@ -1,5 +1,9 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import JobCard from '#lib/components/JobCard.svelte';
+	import type { PageProps } from './$types';
+
+	let { form }: PageProps = $props();
 </script>
 
 <header class="flex justify-end p-4 sm:p-8">
@@ -23,4 +27,18 @@
 			Hämta jobb
 		</button>
 	</form>
+
+	{#if form?.jobsError}
+		<p role="alert" class="mt-8 font-bold">{form.jobsError}</p>
+	{:else if form?.jobs}
+		{#if form.jobs.length === 0}
+			<p role="status" class="mt-8">Inga annonser hittades.</p>
+		{:else}
+			<ul class="mt-8 flex flex-col gap-4">
+				{#each form.jobs as job (job.id)}
+					<li><JobCard {job} /></li>
+				{/each}
+			</ul>
+		{/if}
+	{/if}
 </main>
