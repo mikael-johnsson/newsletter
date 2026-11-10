@@ -1,12 +1,14 @@
+<script lang="ts">
+	import { resolve } from '$app/paths';
+</script>
+
 <header class="flex justify-end p-4 sm:p-8">
-	<!-- eslint-disable svelte/no-navigation-without-resolve -- /login route not built yet -->
 	<a
-		href="/login"
+		href={resolve('/login')}
 		class="rounded-pill bg-primary px-6 py-2 font-display text-h2 text-ink focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink sm:p-4"
 	>
 		Log in
 	</a>
-	<!-- eslint-enable svelte/no-navigation-without-resolve -->
 </header>
 
 <main class="mx-auto max-w-prose px-4 py-16">
