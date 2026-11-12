@@ -1,3 +1,4 @@
+import type { Article } from './articles.ts';
 import type { JobAd } from './platsbanken.ts';
 import type { Prisma } from './prisma/client';
 
@@ -26,5 +27,19 @@ export function jobAdEntry(job: JobAd, position: number): Prisma.EntryCreateWith
 				applicationDeadline: job.applicationDeadline
 			}
 		}
+	};
+}
+
+export function articleEntry(
+	article: Article,
+	position: number
+): Prisma.EntryCreateWithoutNewsletterInput {
+	return {
+		type: 'ARTICLE',
+		position,
+		title: article.title,
+		link: article.link,
+		summary: article.summary,
+		source: article.source
 	};
 }

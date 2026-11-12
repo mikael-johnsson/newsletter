@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
+	import ArticleCard from '#lib/components/ArticleCard.svelte';
 	import CurrentNewsletter from '#lib/components/CurrentNewsletter.svelte';
 	import JobCard from '#lib/components/JobCard.svelte';
 	import OwnPostForm from '#lib/components/OwnPostForm.svelte';
@@ -10,6 +11,9 @@
 
 	const addedIds = $derived(
 		new Set(data.draft.entries.flatMap((entry) => entry.jobAd?.platsbankenId ?? []))
+	);
+	const addedLinks = $derived(
+		new Set(data.draft.entries.flatMap((entry) => (entry.type === 'ARTICLE' && entry.link) || []))
 	);
 
 	type Tab = 'jobs' | 'articles' | 'own';
@@ -100,7 +104,29 @@
 				hidden={tab !== 'articles'}
 				class="mt-8"
 			>
-				<p role="status">No articles found</p>
+				{#if data.articles.failedSources.length > 0}
+					<p role="alert" class="mb-8 font-bold">
+						Kunde inte hämta: {data.articles.failedSources.join(', ')}.
+					</p>
+				{/if}
+				{#if data.articles.groups.length === 0}
+					<p role="status">Inga artiklar från den senaste veckan.</p>
+				{:else}
+					<div class="flex flex-col gap-8">
+						{#each data.articles.groups as group, index (group.source)}
+							<section aria-labelledby="source-{index}">
+								<h2 id="source-{index}" class="font-display text-h2">{group.source}</h2>
+								<ul class="mt-4 flex flex-col gap-4">
+									{#each group.articles as article (article.link)}
+										<li>
+											<ArticleCard {article} added={addedLinks.has(article.link)} />
+										</li>
+									{/each}
+								</ul>
+							</section>
+						{/each}
+					</div>
+				{/if}
 			</div>
 
 			<div

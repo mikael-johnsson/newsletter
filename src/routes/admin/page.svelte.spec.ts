@@ -19,7 +19,24 @@ const props = {
 	data: {
 		draft: { id: 'draft-1', subject: 'Nyhetsbrev vecka 47', entries: [] },
 		jobs: [job],
-		jobsError: null
+		jobsError: null,
+		articles: {
+			groups: [
+				{
+					source: 'CSS-Tricks',
+					articles: [
+						{
+							title: 'Taming Typography',
+							link: 'https://css-tricks.com/taming-typography/',
+							summary: 'A modern CSS reset.',
+							source: 'CSS-Tricks',
+							publishedAt: '2026-11-10T16:42:18.000Z'
+						}
+					]
+				}
+			],
+			failedSources: []
+		}
 	},
 	form: null
 } as unknown as ComponentProps<typeof Page>;
@@ -39,7 +56,7 @@ describe('admin content tabs', () => {
 
 		await screen.getByRole('tab', { name: 'Artiklar' }).click();
 
-		await expect.element(screen.getByText('No articles found')).toBeVisible();
+		await expect.element(screen.getByRole('link', { name: 'Taming Typography' })).toBeVisible();
 		await expect
 			.element(screen.getByRole('link', { name: 'Frontendutvecklare', includeHidden: true }))
 			.not.toBeVisible();
@@ -66,5 +83,17 @@ describe('admin content tabs', () => {
 			.element(screen.getByRole('tab', { name: 'Eget inlägg' }))
 			.toHaveAttribute('aria-selected', 'true');
 		await expect.element(screen.getByLabelText('Titel')).toBeVisible();
+	});
+
+	it('lists the articles it could fetch and names the feeds that failed', async () => {
+		const screen = await render(Page, {
+			...props,
+			data: { ...props.data, articles: { ...props.data.articles, failedSources: ['Breakit'] } }
+		});
+
+		await screen.getByRole('tab', { name: 'Artiklar' }).click();
+
+		await expect.element(screen.getByRole('alert')).toHaveTextContent('Kunde inte hämta: Breakit.');
+		await expect.element(screen.getByRole('heading', { name: 'CSS-Tricks' })).toBeVisible();
 	});
 });

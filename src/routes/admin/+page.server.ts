@@ -1,6 +1,8 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { SESSION_COOKIE } from '#lib/server/session.ts';
+import { fetchArticles } from '#lib/server/articles.ts';
 import {
+	addArticleToDraft,
 	addJobAdToDraft,
 	addOwnPostToDraft,
 	getCurrentDraft,
@@ -20,8 +22,12 @@ async function loadJobs(): Promise<{ jobs: JobAd[]; jobsError: string | null }> 
 }
 
 export const load: PageServerLoad = async () => {
-	const [draft, jobs] = await Promise.all([getCurrentDraft(), loadJobs()]);
-	return { draft, ...jobs };
+	const [draft, jobs, articles] = await Promise.all([
+		getCurrentDraft(),
+		loadJobs(),
+		fetchArticles()
+	]);
+	return { draft, ...jobs, articles };
 };
 
 export const actions = {
@@ -44,6 +50,23 @@ export const actions = {
 		} catch (error) {
 			console.error('[newsletter] Adding job ad failed', error);
 			return fail(502, { addError: 'Kunde inte lägga till annonsen. Försök igen.' });
+		}
+	},
+
+	addArticle: async ({ request }) => {
+		const link = (await request.formData()).get('link');
+		if (typeof link !== 'string' || !URL.canParse(link) || link.length > 2048) {
+			return fail(400, { addError: 'Ogiltig artikel.' });
+		}
+
+		try {
+			const result = await addArticleToDraft(link);
+			if (result === 'not-found') {
+				return fail(404, { addError: 'Artikeln finns inte längre i flödet.' });
+			}
+		} catch (error) {
+			console.error('[newsletter] Adding article failed', error);
+			return fail(502, { addError: 'Kunde inte lägga till artikeln. Försök igen.' });
 		}
 	},
 

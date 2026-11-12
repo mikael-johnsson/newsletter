@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { findArticle, type Article } from './articles.ts';
 import { db } from './db.ts';
 import { getJobAd, type JobAd } from './platsbanken.ts';
 import {
+	addArticleToDraft,
 	addJobAdToDraft,
 	addOwnPostToDraft,
 	draftSubject,
@@ -23,12 +25,14 @@ vi.mock('./db.ts', () => {
 	};
 });
 vi.mock('./platsbanken.ts', () => ({ getJobAd: vi.fn() }));
+vi.mock('./articles.ts', () => ({ findArticle: vi.fn() }));
 
 const findFirst = vi.mocked(db.newsletter.findFirst);
 const create = vi.mocked(db.newsletter.create);
 const update = vi.mocked(db.newsletter.update);
 const deleteEntries = vi.mocked(db.entry.deleteMany);
 const fetchAd = vi.mocked(getJobAd);
+const lookUpArticle = vi.mocked(findArticle);
 
 const job: JobAd = {
 	id: '31684195',
@@ -118,6 +122,53 @@ describe('addJobAdToDraft', () => {
 		fetchAd.mockResolvedValue(null);
 
 		expect(await addJobAdToDraft('1')).toBe('not-found');
+		expect(update).not.toHaveBeenCalled();
+	});
+});
+
+describe('addArticleToDraft', () => {
+	const article: Article = {
+		title: 'Taming Typography',
+		link: 'https://css-tricks.com/taming-typography/',
+		summary: 'A modern CSS reset, step by step.',
+		source: 'CSS-Tricks',
+		publishedAt: '2026-11-10T16:42:18.000Z'
+	};
+
+	it('adds the article after the last entry with its source', async () => {
+		findFirst.mockResolvedValue(draft([{ position: 0 }]));
+		lookUpArticle.mockResolvedValue(article);
+
+		expect(await addArticleToDraft(article.link)).toBe('added');
+
+		expect(update.mock.calls[0][0].data.entries).toEqual({
+			create: {
+				type: 'ARTICLE',
+				position: 1,
+				title: article.title,
+				link: article.link,
+				summary: article.summary,
+				source: 'CSS-Tricks'
+			}
+		});
+	});
+
+	it('does not add the same article twice', async () => {
+		findFirst.mockResolvedValue({
+			...draft(),
+			entries: [{ id: 'entry-0', position: 0, type: 'ARTICLE', link: article.link, jobAd: null }]
+		} as unknown as Draft);
+
+		expect(await addArticleToDraft(article.link)).toBe('duplicate');
+		expect(lookUpArticle).not.toHaveBeenCalled();
+		expect(update).not.toHaveBeenCalled();
+	});
+
+	it('rejects an article that is no longer in the feeds', async () => {
+		findFirst.mockResolvedValue(draft());
+		lookUpArticle.mockResolvedValue(null);
+
+		expect(await addArticleToDraft(article.link)).toBe('not-found');
 		expect(update).not.toHaveBeenCalled();
 	});
 });
