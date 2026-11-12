@@ -20,7 +20,7 @@ const props = {
 		draft: { id: 'draft-1', subject: 'Nyhetsbrev vecka 47', entries: [] },
 		jobs: [job],
 		jobsError: null,
-		articles: {
+		articles: Promise.resolve({
 			groups: [
 				{
 					source: 'CSS-Tricks',
@@ -36,7 +36,7 @@ const props = {
 				}
 			],
 			failedSources: []
-		}
+		})
 	},
 	form: null
 } as unknown as ComponentProps<typeof Page>;
@@ -88,7 +88,13 @@ describe('admin content tabs', () => {
 	it('lists the articles it could fetch and names the feeds that failed', async () => {
 		const screen = await render(Page, {
 			...props,
-			data: { ...props.data, articles: { ...props.data.articles, failedSources: ['Breakit'] } }
+			data: {
+				...props.data,
+				articles: props.data.articles.then((articles) => ({
+					...articles,
+					failedSources: ['Breakit']
+				}))
+			}
 		});
 
 		await screen.getByRole('tab', { name: 'Artiklar' }).click();

@@ -3,6 +3,7 @@ import { XMLParser } from 'fast-xml-parser';
 const USER_AGENT = 'newsletter/0.1 (articles for a personal newsletter)';
 const TIMEOUT_MS = 10_000;
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+const CACHE_MS = 15 * 60 * 1000;
 const SUMMARY_LENGTH = 280;
 
 export interface Article {
@@ -179,8 +180,24 @@ async function fetchSource({ name, url, format }: Source): Promise<Article[]> {
 		: parseHackerNews(await response.json(), name);
 }
 
+// Failed sources are not cached, so they are retried on the next call.
+const cache = new Map<string, { fetchedAt: number; articles: Article[] }>();
+
+export function clearArticleCache(): void {
+	cache.clear();
+}
+
+async function cachedSource(source: Source, now: Date): Promise<Article[]> {
+	const hit = cache.get(source.url);
+	if (hit && now.getTime() - hit.fetchedAt < CACHE_MS) return hit.articles;
+
+	const articles = await fetchSource(source);
+	cache.set(source.url, { fetchedAt: now.getTime(), articles });
+	return articles;
+}
+
 export async function fetchArticles(now = new Date()): Promise<ArticleList> {
-	const results = await Promise.allSettled(SOURCES.map(fetchSource));
+	const results = await Promise.allSettled(SOURCES.map((source) => cachedSource(source, now)));
 	const cutoff = now.getTime() - MAX_AGE_MS;
 	const groups = new Map<string, Map<string, Article>>();
 	const failedSources = new Set<string>();

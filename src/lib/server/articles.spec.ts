@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+	clearArticleCache,
 	fetchArticles,
 	findArticle,
 	parseFeed,
@@ -128,6 +129,7 @@ describe('fetchArticles', () => {
 	afterEach(() => {
 		vi.unstubAllGlobals();
 		vi.restoreAllMocks();
+		clearArticleCache();
 	});
 
 	function stubSources(responses: Record<string, () => Response>) {
@@ -188,10 +190,65 @@ describe('fetchArticles', () => {
 	});
 });
 
+describe('article cache', () => {
+	afterEach(() => {
+		vi.unstubAllGlobals();
+		vi.restoreAllMocks();
+		clearArticleCache();
+	});
+
+	const minutesLater = (minutes: number) => new Date(NOW.getTime() + minutes * 60 * 1000);
+
+	function stubFetch(failing: string[] = []) {
+		vi.spyOn(console, 'error').mockImplementation(() => {});
+		const fetchMock = vi.fn(async (url: string) => {
+			const source = SOURCES.find((s) => s.url === url);
+			if (failing.includes(source?.name ?? '')) return new Response('', { status: 500 });
+			return source?.format === 'hackernews'
+				? Response.json({ hits: [] })
+				: new Response(rss(source?.name === 'CSS-Tricks' ? cssItem : ''));
+		});
+		vi.stubGlobal('fetch', fetchMock);
+		return fetchMock;
+	}
+
+	it('reuses fetched sources for 15 minutes, then fetches them again', async () => {
+		const fetchMock = stubFetch();
+
+		await fetchArticles(NOW);
+		await fetchArticles(minutesLater(14));
+		expect(fetchMock).toHaveBeenCalledTimes(SOURCES.length);
+
+		await fetchArticles(minutesLater(15));
+		expect(fetchMock).toHaveBeenCalledTimes(SOURCES.length * 2);
+	});
+
+	it('retries a source that failed instead of caching the failure', async () => {
+		const fetchMock = stubFetch(['Breakit']);
+
+		await fetchArticles(NOW);
+		const { failedSources } = await fetchArticles(minutesLater(1));
+
+		expect(failedSources).toEqual(['Breakit']);
+		expect(fetchMock).toHaveBeenCalledTimes(SOURCES.length + 1);
+	});
+
+	it('finds an article from the listed feeds without fetching them again', async () => {
+		const fetchMock = stubFetch();
+
+		await fetchArticles(NOW);
+		const article = await findArticle('https://css-tricks.com/taming-typography/', minutesLater(1));
+
+		expect(article?.title).toBe('Taming Typography & Resets');
+		expect(fetchMock).toHaveBeenCalledTimes(SOURCES.length);
+	});
+});
+
 describe('findArticle', () => {
 	afterEach(() => {
 		vi.unstubAllGlobals();
 		vi.restoreAllMocks();
+		clearArticleCache();
 	});
 
 	it('finds an article by link in the current feeds', async () => {

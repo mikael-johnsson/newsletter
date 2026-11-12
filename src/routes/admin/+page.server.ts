@@ -22,12 +22,8 @@ async function loadJobs(): Promise<{ jobs: JobAd[]; jobsError: string | null }> 
 }
 
 export const load: PageServerLoad = async () => {
-	const [draft, jobs, articles] = await Promise.all([
-		getCurrentDraft(),
-		loadJobs(),
-		fetchArticles()
-	]);
-	return { draft, ...jobs, articles };
+	const [draft, jobs] = await Promise.all([getCurrentDraft(), loadJobs()]);
+	return { draft, ...jobs, articles: fetchArticles() };
 };
 
 export const actions = {
