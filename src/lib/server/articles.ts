@@ -4,6 +4,8 @@ const USER_AGENT = 'newsletter/0.1 (articles for a personal newsletter)';
 const TIMEOUT_MS = 10_000;
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const CACHE_MS = 15 * 60 * 1000;
+const MAX_PER_SOURCE = 15;
+const PAYWALL_CACHE_MS = 24 * 60 * 60 * 1000;
 const SUMMARY_LENGTH = 280;
 
 export interface Article {
@@ -46,8 +48,7 @@ export const SOURCES: Source[] = [
 	{ name: 'Josh W. Comeau', url: 'https://www.joshwcomeau.com/rss.xml', format: 'feed' },
 	{ name: 'Computer Sweden', url: 'https://computersweden.se/feed/', format: 'feed' },
 	{ name: 'Breakit', url: 'https://www.breakit.se/feed/artiklar', format: 'feed' },
-	{ name: 'Ny Teknik', url: 'https://www.nyteknik.se/?lab_viewport=rss', format: 'feed' },
-	{ name: 'Techtidningen', url: 'https://techtidningen.se/feed/', format: 'feed' }
+	{ name: 'Ny Teknik', url: 'https://www.nyteknik.se/?lab_viewport=rss', format: 'feed' }
 ];
 
 const NAMED_ENTITIES: Record<string, string> = {
@@ -180,20 +181,50 @@ async function fetchSource({ name, url, format }: Source): Promise<Article[]> {
 		: parseHackerNews(await response.json(), name);
 }
 
-// Failed sources are not cached, so they are retried on the next call.
-const cache = new Map<string, { fetchedAt: number; articles: Article[] }>();
+// Failed fetches are not cached, so they are retried on the next call.
+const sourceCache = new Map<string, { fetchedAt: number; articles: Article[] }>();
+const paywallCache = new Map<string, { checkedAt: number; paid: boolean }>();
 
 export function clearArticleCache(): void {
-	cache.clear();
+	sourceCache.clear();
+	paywallCache.clear();
 }
 
 async function cachedSource(source: Source, now: Date): Promise<Article[]> {
-	const hit = cache.get(source.url);
+	const hit = sourceCache.get(source.url);
 	if (hit && now.getTime() - hit.fetchedAt < CACHE_MS) return hit.articles;
 
 	const articles = await fetchSource(source);
-	cache.set(source.url, { fetchedAt: now.getTime(), articles });
+	sourceCache.set(source.url, { fetchedAt: now.getTime(), articles });
 	return articles;
+}
+
+// Publishers mark paywalled pages with schema.org's isAccessibleForFree. Without it we cannot
+// tell, so the article is kept.
+const PAID_MARKER = /"isAccessibleForFree"\s*:\s*"?false"?/i;
+
+async function isPaid(link: string, now: Date): Promise<boolean> {
+	const hit = paywallCache.get(link);
+	if (hit && now.getTime() - hit.checkedAt < PAYWALL_CACHE_MS) return hit.paid;
+
+	try {
+		const response = await fetch(link, {
+			headers: { 'user-agent': USER_AGENT },
+			signal: AbortSignal.timeout(TIMEOUT_MS)
+		});
+		if (!response.ok) return false;
+		const paid = PAID_MARKER.test(await response.text());
+		paywallCache.set(link, { checkedAt: now.getTime(), paid });
+		return paid;
+	} catch (error) {
+		console.warn(`[articles] Could not check the paywall for ${link}`, error);
+		return false;
+	}
+}
+
+async function withoutPaywall(articles: Article[], now: Date): Promise<Article[]> {
+	const paid = await Promise.all(articles.map((article) => isPaid(article.link, now)));
+	return articles.filter((_, index) => !paid[index]);
 }
 
 export async function fetchArticles(now = new Date()): Promise<ArticleList> {
@@ -219,13 +250,20 @@ export async function fetchArticles(now = new Date()): Promise<ArticleList> {
 		groups.set(name, group);
 	});
 
+	const checked = await Promise.all(
+		[...groups].map(async ([source, articles]) => ({
+			source,
+			articles: await withoutPaywall(
+				[...articles.values()]
+					.sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))
+					.slice(0, MAX_PER_SOURCE),
+				now
+			)
+		}))
+	);
+
 	return {
-		groups: [...groups]
-			.map(([source, articles]) => ({
-				source,
-				articles: [...articles.values()].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))
-			}))
-			.filter(({ articles }) => articles.length > 0),
+		groups: checked.filter(({ articles }) => articles.length > 0),
 		failedSources: [...failedSources]
 	};
 }

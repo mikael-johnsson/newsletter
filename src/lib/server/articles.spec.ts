@@ -170,6 +170,25 @@ describe('fetchArticles', () => {
 		expect(groups[0].articles.map((a) => a.title)).toEqual(['Taming Typography & Resets']);
 	});
 
+	it('shows only the 15 newest articles per source', async () => {
+		const items = Array.from({ length: 20 }, (_, day) =>
+			cssItem
+				.replace('Taming Typography &amp; Resets', `Article ${day}`)
+				.replace('taming-typography', `article-${day}`)
+				.replace(
+					'Tue, 10 Nov 2026 16:42:18',
+					`Tue, 10 Nov 2026 ${String(day).padStart(2, '0')}:00:00`
+				)
+		).join('');
+		stubSources({ 'CSS-Tricks': () => new Response(rss(items)) });
+
+		const { groups } = await fetchArticles(NOW);
+
+		expect(groups[0].articles.map((a) => a.title)).toEqual(
+			Array.from({ length: 15 }, (_, i) => `Article ${19 - i}`)
+		);
+	});
+
 	it('merges both Hacker News searches into one group without duplicates', async () => {
 		const story = {
 			objectID: '1',
@@ -217,10 +236,10 @@ describe('article cache', () => {
 
 		await fetchArticles(NOW);
 		await fetchArticles(minutesLater(14));
-		expect(fetchMock).toHaveBeenCalledTimes(SOURCES.length);
+		expect(fetchMock).toHaveBeenCalledTimes(SOURCES.length + 1);
 
 		await fetchArticles(minutesLater(15));
-		expect(fetchMock).toHaveBeenCalledTimes(SOURCES.length * 2);
+		expect(fetchMock).toHaveBeenCalledTimes(SOURCES.length * 2 + 1);
 	});
 
 	it('retries a source that failed instead of caching the failure', async () => {
@@ -230,7 +249,7 @@ describe('article cache', () => {
 		const { failedSources } = await fetchArticles(minutesLater(1));
 
 		expect(failedSources).toEqual(['Breakit']);
-		expect(fetchMock).toHaveBeenCalledTimes(SOURCES.length + 1);
+		expect(fetchMock).toHaveBeenCalledTimes(SOURCES.length + 2);
 	});
 
 	it('finds an article from the listed feeds without fetching them again', async () => {
@@ -240,7 +259,65 @@ describe('article cache', () => {
 		const article = await findArticle('https://css-tricks.com/taming-typography/', minutesLater(1));
 
 		expect(article?.title).toBe('Taming Typography & Resets');
-		expect(fetchMock).toHaveBeenCalledTimes(SOURCES.length);
+		expect(fetchMock).toHaveBeenCalledTimes(SOURCES.length + 1);
+	});
+});
+
+describe('paywall filter', () => {
+	afterEach(() => {
+		vi.unstubAllGlobals();
+		vi.restoreAllMocks();
+		clearArticleCache();
+	});
+
+	const freeLink = 'https://css-tricks.com/taming-typography/';
+	const paidLink = 'https://css-tricks.com/paid-article/';
+	const twoItems =
+		cssItem + cssItem.replace('Taming Typography &amp; Resets', 'Paid').replace(freeLink, paidLink);
+	const page = (accessible: string) =>
+		new Response(
+			`<html><script type="application/ld+json">{"@type":"NewsArticle","isAccessibleForFree":${accessible}}</script></html>`
+		);
+
+	function stubPages(pages: Record<string, () => Response>) {
+		vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const fetchMock = vi.fn(async (url: string) => {
+			if (pages[url]) return pages[url]();
+			const source = SOURCES.find((s) => s.url === url);
+			if (source?.name === 'CSS-Tricks') return new Response(rss(twoItems));
+			return source?.format === 'hackernews' ? Response.json({ hits: [] }) : new Response(rss(''));
+		});
+		vi.stubGlobal('fetch', fetchMock);
+		return fetchMock;
+	}
+
+	const titles = async (now = NOW) =>
+		(await fetchArticles(now)).groups.flatMap(({ articles }) => articles.map((a) => a.title));
+
+	it('drops articles whose page says they are not free', async () => {
+		stubPages({ [paidLink]: () => page('false'), [freeLink]: () => page('true') });
+
+		expect(await titles()).toEqual(['Taming Typography & Resets']);
+	});
+
+	it('keeps articles whose page has no marker or cannot be loaded', async () => {
+		stubPages({
+			[freeLink]: () => new Response('<html></html>'),
+			[paidLink]: () => {
+				throw new TypeError('fetch failed');
+			}
+		});
+
+		expect(await titles()).toEqual(['Taming Typography & Resets', 'Paid']);
+	});
+
+	it('does not check the same article page again within a day', async () => {
+		const fetchMock = stubPages({ [paidLink]: () => page('false') });
+
+		await titles();
+		await titles(new Date(NOW.getTime() + 60 * 60 * 1000));
+
+		expect(fetchMock.mock.calls.filter(([url]) => url === paidLink)).toHaveLength(1);
 	});
 });
 
