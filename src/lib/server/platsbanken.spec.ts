@@ -1,5 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { buildSearchUrl, getJobAd, parseSearchResponse, searchJobAds } from './platsbanken.ts';
+import {
+	buildSearchUrl,
+	DEFAULT_QUERY,
+	getJobAd,
+	MAX_QUERY_LENGTH,
+	parseQuery,
+	parseSearchResponse,
+	searchJobAds
+} from './platsbanken.ts';
 
 const hit = {
 	id: '31684195',
@@ -22,10 +30,26 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
+describe('parseQuery', () => {
+	it('uses what the author typed, without surrounding spaces', () => {
+		expect(parseQuery('  backend utvecklare ')).toBe('backend utvecklare');
+	});
+
+	it('falls back to the default search when nothing was typed', () => {
+		for (const value of [null, '', '   ']) {
+			expect(parseQuery(value)).toBe(DEFAULT_QUERY);
+		}
+	});
+
+	it('cuts off overly long searches', () => {
+		expect(parseQuery('a'.repeat(500))).toHaveLength(MAX_QUERY_LENGTH);
+	});
+});
+
 describe('buildSearchUrl', () => {
-	it('encodes the query, limit and offset', () => {
+	it('searches in Stockholms län and encodes the query, limit and offset', () => {
 		expect(buildSearchUrl('frontend utvecklare', 10, 20).toString()).toBe(
-			'https://jobsearch.api.jobtechdev.se/search?q=frontend+utvecklare&limit=10&offset=20'
+			'https://jobsearch.api.jobtechdev.se/search?q=frontend+utvecklare&region=CifL_Rzy_Mku&limit=10&offset=20'
 		);
 	});
 });
@@ -86,7 +110,7 @@ describe('searchJobAds', () => {
 		const { jobs } = await searchJobAds();
 
 		expect(fetchMock.mock.calls[0][0].toString()).toBe(
-			'https://jobsearch.api.jobtechdev.se/search?q=frontendutvecklare&limit=10&offset=0'
+			'https://jobsearch.api.jobtechdev.se/search?q=frontendutvecklare&region=CifL_Rzy_Mku&limit=10&offset=0'
 		);
 		expect(jobs).toHaveLength(1);
 	});

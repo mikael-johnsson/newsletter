@@ -3,8 +3,11 @@ const USER_AGENT = 'newsletter/0.1 (job ads for a personal newsletter)';
 const TIMEOUT_MS = 10_000;
 
 export const DEFAULT_QUERY = 'frontendutvecklare';
+// JobTech concept id for Stockholms län
+export const STOCKHOLM_REGION = 'CifL_Rzy_Mku';
 export const DEFAULT_LIMIT = 10;
 export const MAX_OFFSET = 2000;
+export const MAX_QUERY_LENGTH = 100;
 
 export interface JobAd {
 	id: string;
@@ -33,6 +36,11 @@ interface Hit {
 	application_deadline?: string | null;
 }
 
+export function parseQuery(value: string | null): string {
+	const query = value?.trim().slice(0, MAX_QUERY_LENGTH).trim() ?? '';
+	return query || DEFAULT_QUERY;
+}
+
 export interface SearchResult {
 	jobs: JobAd[];
 	total: number;
@@ -41,6 +49,7 @@ export interface SearchResult {
 export function buildSearchUrl(query: string, limit: number, offset = 0): URL {
 	const url = new URL('/search', API_URL);
 	url.searchParams.set('q', query);
+	url.searchParams.set('region', STOCKHOLM_REGION);
 	url.searchParams.set('limit', String(limit));
 	url.searchParams.set('offset', String(offset));
 	return url;

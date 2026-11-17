@@ -19,6 +19,7 @@ const props = {
 	data: {
 		draft: { id: 'draft-1', subject: 'Nyhetsbrev vecka 47', entries: [] },
 		jobs: [job],
+		jobsQuery: 'frontendutvecklare',
 		jobsPage: 1,
 		jobsTotalPages: 1,
 		jobsError: null,
@@ -51,6 +52,20 @@ describe('admin content tabs', () => {
 			.element(screen.getByRole('tab', { name: 'Jobb' }))
 			.toHaveAttribute('aria-selected', 'true');
 		await expect.element(screen.getByRole('link', { name: 'Frontendutvecklare' })).toBeVisible();
+	});
+
+	it('shows the current job search and keeps it when paging', async () => {
+		const screen = await render(Page, {
+			...props,
+			data: { ...props.data, jobsQuery: 'backend & devops', jobsPage: 2, jobsTotalPages: 5 }
+		});
+
+		await expect
+			.element(screen.getByRole('searchbox', { name: 'Sök jobb' }))
+			.toHaveValue('backend & devops');
+		await expect
+			.element(screen.getByRole('link', { name: 'Nästa' }))
+			.toHaveAttribute('href', '/admin?q=backend+%26+devops&page=3');
 	});
 
 	it('switches to articles and hides the job ads', async () => {

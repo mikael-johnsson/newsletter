@@ -86,10 +86,28 @@
 				hidden={tab !== 'jobs'}
 				class="mt-8"
 			>
+				<form method="GET" role="search" class="mb-8 flex flex-wrap items-end gap-4">
+					<label class="flex grow flex-col gap-2">
+						<span class="font-bold">Sök jobb</span>
+						<input
+							type="search"
+							name="q"
+							value={data.jobsQuery}
+							maxlength="100"
+							class="rounded-sm border-0 bg-ink/5 px-4 py-2 text-body focus:ring-4 focus:ring-ink"
+						/>
+					</label>
+					<button
+						class="rounded-pill bg-ink px-6 py-2 font-bold text-paper focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink"
+					>
+						Sök
+					</button>
+				</form>
+
 				{#if data.jobsError}
 					<p role="alert" class="font-bold">{data.jobsError}</p>
 				{:else if data.jobs.length === 0}
-					<p role="status">Inga annonser hittades.</p>
+					<p role="status">Inga annonser hittades för ”{data.jobsQuery}”.</p>
 				{:else}
 					<ul class="flex flex-col gap-4">
 						{#each data.jobs as job (job.id)}
@@ -100,7 +118,8 @@
 						<Pagination
 							page={data.jobsPage}
 							totalPages={data.jobsTotalPages}
-							href={(page) => resolve(`/admin?page=${page}`)}
+							href={(page) =>
+								resolve(`/admin?${new URLSearchParams({ q: data.jobsQuery, page: String(page) })}`)}
 							label="Sidor med jobbannonser"
 						/>
 					</div>
