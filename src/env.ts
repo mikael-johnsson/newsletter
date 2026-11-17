@@ -28,6 +28,11 @@ export const variables = defineEnvVars({
 				.map((address) => address.trim().toLowerCase())
 				.filter(Boolean)
 	},
+	MAIL_TEST_TO: {
+		description:
+			'Where the admin "Skicka testmejl" button sends the current draft, normally the author',
+		schema: (value) => value?.trim().toLowerCase() || undefined
+	},
 	MAIL_FROM: {
 		description:
 			'Sender, e.g. `Juniorens nyhetsbrev <onboarding@resend.dev>`; needed unless MAIL_SEND=off',

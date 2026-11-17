@@ -4,6 +4,7 @@ const { env, emailsSend } = vi.hoisted(() => ({
 	env: {
 		MAIL_SEND: 'off' as 'off' | 'allowlist' | 'all',
 		MAIL_ALLOWLIST: [] as string[],
+		MAIL_TEST_TO: 'delivered@resend.dev' as string | undefined,
 		MAIL_FROM: 'Juniorens nyhetsbrev <onboarding@resend.dev>' as string | undefined,
 		RESEND_API_KEY: 're_test' as string | undefined
 	},
@@ -16,6 +17,9 @@ vi.mock('$app/env/private', () => ({
 	},
 	get MAIL_ALLOWLIST() {
 		return env.MAIL_ALLOWLIST;
+	},
+	get MAIL_TEST_TO() {
+		return env.MAIL_TEST_TO;
 	},
 	get MAIL_FROM() {
 		return env.MAIL_FROM;
@@ -31,7 +35,7 @@ vi.mock('resend', () => ({
 	}
 }));
 
-const { sendConfirmation } = await import('./mail.ts');
+const { sendConfirmation, sendTestIssue } = await import('./mail.ts');
 
 const to = 'delivered@resend.dev';
 const confirmUrl = 'https://example.test/confirm/token-1';
@@ -43,6 +47,7 @@ beforeEach(() => {
 	Object.assign(env, {
 		MAIL_SEND: 'all',
 		MAIL_ALLOWLIST: [],
+		MAIL_TEST_TO: 'delivered@resend.dev',
 		MAIL_FROM: 'Juniorens nyhetsbrev <onboarding@resend.dev>',
 		RESEND_API_KEY: 're_test'
 	});
@@ -92,6 +97,43 @@ describe('sendConfirmation', () => {
 		env.RESEND_API_KEY = undefined;
 
 		await expect(sendConfirmation(to, confirmUrl)).rejects.toThrow('RESEND_API_KEY');
+		expect(emailsSend).not.toHaveBeenCalled();
+	});
+});
+
+describe('sendTestIssue', () => {
+	const issue = {
+		subject: 'Nyhetsbrev vecka 47',
+		html: '<p>Hej</p>',
+		text: 'Hej',
+		headers: { 'List-Unsubscribe': '<https://example.test/unsubscribe/test>' }
+	};
+
+	it('sends only to MAIL_TEST_TO, marked as a test, with a fresh send on every click', async () => {
+		const outcome = await sendTestIssue(issue);
+
+		expect(outcome).toEqual({ to: 'delivered@resend.dev', result: 'sent' });
+		const [payload, options] = emailsSend.mock.calls[0];
+		expect(payload).toMatchObject({
+			to: 'delivered@resend.dev',
+			subject: '[TEST] Nyhetsbrev vecka 47',
+			headers: issue.headers
+		});
+		expect(options).toBeUndefined();
+	});
+
+	it('still respects MAIL_SEND and reports that the email was only logged', async () => {
+		env.MAIL_SEND = 'allowlist';
+		env.MAIL_ALLOWLIST = ['someone-else@resend.dev'];
+
+		expect(await sendTestIssue(issue)).toEqual({ to: 'delivered@resend.dev', result: 'logged' });
+		expect(emailsSend).not.toHaveBeenCalled();
+	});
+
+	it('refuses to send when MAIL_TEST_TO is not set', async () => {
+		env.MAIL_TEST_TO = undefined;
+
+		await expect(sendTestIssue(issue)).rejects.toThrow('MAIL_TEST_TO');
 		expect(emailsSend).not.toHaveBeenCalled();
 	});
 });

@@ -26,6 +26,7 @@
 	];
 
 	let tab = $state<Tab>('jobs');
+	let sendingTest = $state(false);
 
 	async function moveTab(event: KeyboardEvent) {
 		if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
@@ -51,7 +52,34 @@
 <main class="mx-auto px-4 py-16">
 	<h1 class="font-display text-h2 sm:text-display">Admin</h1>
 	<section class="mt-16 grid grid-cols-1 gap-16 sm:grid-cols-2">
-		<CurrentNewsletter newsletter={data.draft} />
+		<div class="flex flex-col gap-8">
+			<CurrentNewsletter newsletter={data.draft} />
+
+			<form
+				method="POST"
+				action="?/sendTest"
+				use:enhance={() => {
+					sendingTest = true;
+					return async ({ update }) => {
+						await update();
+						sendingTest = false;
+					};
+				}}
+				class="flex flex-col items-start gap-4"
+			>
+				<button
+					disabled={sendingTest || data.draft.entries.length === 0}
+					class="rounded-pill bg-ink px-6 py-2 font-bold text-paper focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink disabled:opacity-50"
+				>
+					{sendingTest ? 'Skickar…' : 'Skicka testmejl'}
+				</button>
+				{#if form?.testSent}
+					<p role="status">{form.testSent}</p>
+				{:else if form?.testError}
+					<p role="alert" class="font-bold">{form.testError}</p>
+				{/if}
+			</form>
+		</div>
 
 		<section>
 			{#if form?.addError || form?.removeError}

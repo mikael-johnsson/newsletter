@@ -120,3 +120,40 @@ describe('admin content tabs', () => {
 		await expect.element(screen.getByRole('heading', { name: 'CSS-Tricks' })).toBeVisible();
 	});
 });
+
+describe('admin test email', () => {
+	it('cannot send a test of an empty draft', async () => {
+		const screen = await render(Page, props);
+
+		await expect.element(screen.getByRole('button', { name: 'Skicka testmejl' })).toBeDisabled();
+	});
+
+	it('shows where the test email went', async () => {
+		const screen = await render(Page, {
+			...props,
+			data: {
+				...props.data,
+				draft: {
+					...props.data.draft,
+					entries: [
+						{
+							id: 'entry-1',
+							type: 'FREEHAND',
+							title: 'Hej läsare',
+							link: null,
+							summary: 'Välkommen.',
+							source: 'Eget inlägg',
+							jobAd: null
+						}
+					]
+				}
+			},
+			form: { testSent: 'Testmejl skickat till delivered@resend.dev.' }
+		} as unknown as ComponentProps<typeof Page>);
+
+		await expect.element(screen.getByRole('button', { name: 'Skicka testmejl' })).toBeEnabled();
+		await expect
+			.element(screen.getByRole('status'))
+			.toHaveTextContent('Testmejl skickat till delivered@resend.dev.');
+	});
+});

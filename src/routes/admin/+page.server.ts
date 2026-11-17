@@ -1,6 +1,8 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { SESSION_COOKIE } from '#lib/server/session.ts';
 import { fetchArticles } from '#lib/server/articles.ts';
+import { renderIssue } from '#lib/server/issue-email.ts';
+import { sendTestIssue } from '#lib/server/mail.ts';
 import {
 	addArticleToDraft,
 	addJobAdToDraft,
@@ -108,6 +110,32 @@ export const actions = {
 					values: { title, url: url ?? '', text },
 					errors: { form: 'Kunde inte lägga till inlägget. Försök igen.' }
 				}
+			});
+		}
+	},
+
+	sendTest: async ({ url }) => {
+		const draft = await getCurrentDraft();
+		if (draft.entries.length === 0) {
+			return fail(400, {
+				testError: 'Utkastet är tomt. Lägg till något innan du skickar ett test.'
+			});
+		}
+
+		try {
+			// No reader has the token "test", so the unsubscribe link in a test email changes nothing.
+			const issue = renderIssue(draft, `${url.origin}/unsubscribe/test`);
+			const { to, result } = await sendTestIssue(issue);
+			return {
+				testSent:
+					result === 'sent'
+						? `Testmejl skickat till ${to}.`
+						: `Inte skickat: MAIL_SEND släpper inte igenom ${to}. Mejlet finns i serverloggen.`
+			};
+		} catch (error) {
+			console.error('[mail] Test email failed', error);
+			return fail(502, {
+				testError: 'Kunde inte skicka testmejlet. Kolla MAIL_TEST_TO och serverloggen.'
 			});
 		}
 	},

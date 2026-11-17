@@ -1,13 +1,23 @@
 import { Resend } from 'resend';
-import { MAIL_ALLOWLIST, MAIL_FROM, MAIL_SEND, RESEND_API_KEY } from '$app/env/private';
+import {
+	MAIL_ALLOWLIST,
+	MAIL_FROM,
+	MAIL_SEND,
+	MAIL_TEST_TO,
+	RESEND_API_KEY
+} from '$app/env/private';
+import type { RenderedIssue } from './issue-email.ts';
 
 type Email = {
 	to: string;
 	subject: string;
 	html: string;
 	text: string;
-	idempotencyKey: string;
+	headers?: Record<string, string>;
+	idempotencyKey?: string;
 };
+
+export type SendResult = 'sent' | 'logged';
 
 let client: Resend | undefined;
 
@@ -17,23 +27,34 @@ function isAllowed(to: string): boolean {
 	return false;
 }
 
-async function send(email: Email): Promise<void> {
+async function send(email: Email): Promise<SendResult> {
 	if (!isAllowed(email.to)) {
 		console.info(
 			`[mail] Not sent (MAIL_SEND=${MAIL_SEND}) to ${email.to}: ${email.subject}\n${email.text}`
 		);
-		return;
+		return 'logged';
 	}
 	if (!RESEND_API_KEY || !MAIL_FROM) {
 		throw new Error('MAIL_SEND is on, but RESEND_API_KEY or MAIL_FROM is missing');
 	}
 
 	client ??= new Resend(RESEND_API_KEY);
+	const { to, subject, html, text, headers, idempotencyKey } = email;
 	const { error } = await client.emails.send(
-		{ from: MAIL_FROM, to: email.to, subject: email.subject, html: email.html, text: email.text },
-		{ idempotencyKey: email.idempotencyKey }
+		{ from: MAIL_FROM, to, subject, html, text, headers },
+		idempotencyKey ? { idempotencyKey } : undefined
 	);
 	if (error) throw new Error(`Resend refused the email: ${error.name}: ${error.message}`);
+	return 'sent';
+}
+
+// No idempotency key: every click should send, so the author sees each change.
+export async function sendTestIssue(
+	issue: RenderedIssue
+): Promise<{ to: string; result: SendResult }> {
+	if (!MAIL_TEST_TO) throw new Error('MAIL_TEST_TO is not set');
+	const result = await send({ ...issue, to: MAIL_TEST_TO, subject: `[TEST] ${issue.subject}` });
+	return { to: MAIL_TEST_TO, result };
 }
 
 // The key repeats for the same confirm link, so resubmitting the form sends at most one email per 24 hours.
