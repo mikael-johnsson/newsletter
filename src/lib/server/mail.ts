@@ -1,4 +1,63 @@
-// No mail provider yet: log instead of sending, so nothing reaches a real inbox.
+import { Resend } from 'resend';
+import { MAIL_ALLOWLIST, MAIL_FROM, MAIL_SEND, RESEND_API_KEY } from '$app/env/private';
+
+type Email = {
+	to: string;
+	subject: string;
+	html: string;
+	text: string;
+	idempotencyKey: string;
+};
+
+let client: Resend | undefined;
+
+function isAllowed(to: string): boolean {
+	if (MAIL_SEND === 'all') return true;
+	if (MAIL_SEND === 'allowlist') return MAIL_ALLOWLIST.includes(to.toLowerCase());
+	return false;
+}
+
+async function send(email: Email): Promise<void> {
+	if (!isAllowed(email.to)) {
+		console.info(
+			`[mail] Not sent (MAIL_SEND=${MAIL_SEND}) to ${email.to}: ${email.subject}\n${email.text}`
+		);
+		return;
+	}
+	if (!RESEND_API_KEY || !MAIL_FROM) {
+		throw new Error('MAIL_SEND is on, but RESEND_API_KEY or MAIL_FROM is missing');
+	}
+
+	client ??= new Resend(RESEND_API_KEY);
+	const { error } = await client.emails.send(
+		{ from: MAIL_FROM, to: email.to, subject: email.subject, html: email.html, text: email.text },
+		{ idempotencyKey: email.idempotencyKey }
+	);
+	if (error) throw new Error(`Resend refused the email: ${error.name}: ${error.message}`);
+}
+
+// The key repeats for the same confirm link, so resubmitting the form sends at most one email per 24 hours.
 export async function sendConfirmation(to: string, confirmUrl: string): Promise<void> {
-	console.info(`[mail] Confirmation for ${to}: ${confirmUrl}`);
+	await send({
+		to,
+		subject: 'Bekräfta din prenumeration på Juniorens nyhetsbrev',
+		text: [
+			'Hej!',
+			'',
+			'Klicka på länken för att bekräfta att du vill få Juniorens nyhetsbrev en gång i veckan:',
+			confirmUrl,
+			'',
+			'Har du inte anmält dig? Då kan du ignorera det här mejlet.'
+		].join('\n'),
+		html: `<!doctype html>
+<html lang="sv">
+<body style="margin:0;padding:24px;background:#FFF8EE;color:#141414;font-family:Inter,Arial,sans-serif;font-size:18px;line-height:1.5">
+<p>Hej!</p>
+<p>Klicka på knappen för att bekräfta att du vill få Juniorens nyhetsbrev en gång i veckan.</p>
+<p><a href="${confirmUrl}" style="display:inline-block;padding:12px 20px;background:#FF4D2E;color:#141414;font-weight:700;text-decoration:none;border-radius:8px">Bekräfta prenumerationen</a></p>
+<p style="color:#6B6459;font-size:15px">Har du inte anmält dig? Då kan du ignorera det här mejlet.</p>
+</body>
+</html>`,
+		idempotencyKey: `confirm/${confirmUrl}`
+	});
 }
