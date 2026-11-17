@@ -23,16 +23,16 @@ afterEach(() => {
 });
 
 describe('buildSearchUrl', () => {
-	it('encodes the query and limit', () => {
-		expect(buildSearchUrl('frontend utvecklare', 10).toString()).toBe(
-			'https://jobsearch.api.jobtechdev.se/search?q=frontend+utvecklare&limit=10'
+	it('encodes the query, limit and offset', () => {
+		expect(buildSearchUrl('frontend utvecklare', 10, 20).toString()).toBe(
+			'https://jobsearch.api.jobtechdev.se/search?q=frontend+utvecklare&limit=10&offset=20'
 		);
 	});
 });
 
 describe('parseSearchResponse', () => {
 	it('turns a hit into a job ad', () => {
-		expect(parseSearchResponse({ hits: [hit] })).toEqual([
+		expect(parseSearchResponse({ hits: [hit] }).jobs).toEqual([
 			{
 				id: '31684195',
 				title: 'Frontendutvecklare',
@@ -47,7 +47,9 @@ describe('parseSearchResponse', () => {
 	});
 
 	it('falls back to the region when the ad has no municipality', () => {
-		const [ad] = parseSearchResponse({
+		const {
+			jobs: [ad]
+		} = parseSearchResponse({
 			hits: [{ ...hit, workplace_address: { municipality: null, region: 'Skåne län' } }]
 		});
 
@@ -55,14 +57,20 @@ describe('parseSearchResponse', () => {
 	});
 
 	it('keeps an ad with only an id and a title, and links it to Platsbanken', () => {
-		const [ad] = parseSearchResponse({ hits: [{ id: '123', headline: 'Utvecklare' }] });
+		const {
+			jobs: [ad]
+		} = parseSearchResponse({ hits: [{ id: '123', headline: 'Utvecklare' }] });
 
 		expect(ad).toMatchObject({ employer: '', location: '', occupation: '' });
 		expect(ad.url).toBe('https://arbetsformedlingen.se/platsbanken/annonser/123');
 	});
 
+	it('returns the total number of matching ads, not just this page', () => {
+		expect(parseSearchResponse({ total: { value: 137 }, hits: [hit] }).total).toBe(137);
+	});
+
 	it('returns no ads for an empty search', () => {
-		expect(parseSearchResponse({ total: { value: 0 }, hits: [] })).toEqual([]);
+		expect(parseSearchResponse({ total: { value: 0 }, hits: [] })).toEqual({ jobs: [], total: 0 });
 	});
 
 	it('throws when the response shape has changed', () => {
@@ -75,12 +83,12 @@ describe('searchJobAds', () => {
 	it('searches for 10 frontend ads by default', async () => {
 		const fetchMock = stubFetch(Response.json({ hits: [hit] }));
 
-		const ads = await searchJobAds();
+		const { jobs } = await searchJobAds();
 
 		expect(fetchMock.mock.calls[0][0].toString()).toBe(
-			'https://jobsearch.api.jobtechdev.se/search?q=frontendutvecklare&limit=10'
+			'https://jobsearch.api.jobtechdev.se/search?q=frontendutvecklare&limit=10&offset=0'
 		);
-		expect(ads).toHaveLength(1);
+		expect(jobs).toHaveLength(1);
 	});
 
 	it('throws when the API answers with an error status', async () => {

@@ -19,6 +19,8 @@ const props = {
 	data: {
 		draft: { id: 'draft-1', subject: 'Nyhetsbrev vecka 47', entries: [] },
 		jobs: [job],
+		jobsPage: 1,
+		jobsTotalPages: 1,
 		jobsError: null,
 		articles: Promise.resolve({
 			groups: [

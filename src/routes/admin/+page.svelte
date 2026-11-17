@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import ArticleCard from '#lib/components/ArticleCard.svelte';
 	import CurrentNewsletter from '#lib/components/CurrentNewsletter.svelte';
 	import JobCard from '#lib/components/JobCard.svelte';
 	import OwnPostForm from '#lib/components/OwnPostForm.svelte';
+	import Pagination from '#lib/components/Pagination.svelte';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -94,6 +96,14 @@
 							<li><JobCard {job} added={addedIds.has(job.id)} /></li>
 						{/each}
 					</ul>
+					<div class="mt-8">
+						<Pagination
+							page={data.jobsPage}
+							totalPages={data.jobsTotalPages}
+							href={(page) => resolve(`/admin?page=${page}`)}
+							label="Sidor med jobbannonser"
+						/>
+					</div>
 				{/if}
 			</div>
 

@@ -4,6 +4,7 @@ const TIMEOUT_MS = 10_000;
 
 export const DEFAULT_QUERY = 'frontendutvecklare';
 export const DEFAULT_LIMIT = 10;
+export const MAX_OFFSET = 2000;
 
 export interface JobAd {
 	id: string;
@@ -32,10 +33,16 @@ interface Hit {
 	application_deadline?: string | null;
 }
 
-export function buildSearchUrl(query: string, limit: number): URL {
+export interface SearchResult {
+	jobs: JobAd[];
+	total: number;
+}
+
+export function buildSearchUrl(query: string, limit: number, offset = 0): URL {
 	const url = new URL('/search', API_URL);
 	url.searchParams.set('q', query);
 	url.searchParams.set('limit', String(limit));
+	url.searchParams.set('offset', String(offset));
 	return url;
 }
 
@@ -59,12 +66,14 @@ function toJobAd(hit: Hit): JobAd {
 	};
 }
 
-export function parseSearchResponse(json: unknown): JobAd[] {
-	const hits = (json as { hits?: unknown } | null)?.hits;
+export function parseSearchResponse(json: unknown): SearchResult {
+	const body = json as { hits?: unknown; total?: { value?: unknown } } | null;
+	const hits = body?.hits;
 	if (!Array.isArray(hits) || !hits.every(isHit)) {
 		throw new Error('Unexpected response from the JobTech search API');
 	}
-	return hits.map(toJobAd);
+	const total = body?.total?.value;
+	return { jobs: hits.map(toJobAd), total: typeof total === 'number' ? total : hits.length };
 }
 
 function request(url: URL): Promise<Response> {
@@ -76,9 +85,10 @@ function request(url: URL): Promise<Response> {
 
 export async function searchJobAds({
 	query = DEFAULT_QUERY,
-	limit = DEFAULT_LIMIT
-}: { query?: string; limit?: number } = {}): Promise<JobAd[]> {
-	const url = buildSearchUrl(query, limit);
+	limit = DEFAULT_LIMIT,
+	offset = 0
+}: { query?: string; limit?: number; offset?: number } = {}): Promise<SearchResult> {
+	const url = buildSearchUrl(query, limit, offset);
 	const response = await request(url);
 	if (!response.ok) {
 		throw new Error(`JobTech search failed with status ${response.status}`);

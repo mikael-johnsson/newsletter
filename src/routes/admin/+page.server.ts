@@ -9,20 +9,36 @@ import {
 	removeEntryFromDraft
 } from '#lib/server/newsletters.ts';
 import { parseOwnPost } from '#lib/server/own-post.ts';
-import { searchJobAds, type JobAd } from '#lib/server/platsbanken.ts';
+import { parsePage } from '#lib/pagination.ts';
+import { DEFAULT_LIMIT, MAX_OFFSET, searchJobAds, type JobAd } from '#lib/server/platsbanken.ts';
 import type { Actions, PageServerLoad } from './$types';
 
-async function loadJobs(): Promise<{ jobs: JobAd[]; jobsError: string | null }> {
+const MAX_JOB_PAGE = Math.floor(MAX_OFFSET / DEFAULT_LIMIT) + 1;
+
+async function loadJobs(page: number): Promise<{
+	jobs: JobAd[];
+	jobsPage: number;
+	jobsTotalPages: number;
+	jobsError: string | null;
+}> {
 	try {
-		return { jobs: await searchJobAds(), jobsError: null };
+		const { jobs, total } = await searchJobAds({ offset: (page - 1) * DEFAULT_LIMIT });
+		const jobsTotalPages = Math.min(Math.ceil(total / DEFAULT_LIMIT), MAX_JOB_PAGE);
+		return { jobs, jobsPage: page, jobsTotalPages, jobsError: null };
 	} catch (error) {
 		console.error('[jobs] Platsbanken search failed', error);
-		return { jobs: [], jobsError: 'Kunde inte hämta jobb från Platsbanken. Ladda om sidan.' };
+		return {
+			jobs: [],
+			jobsPage: page,
+			jobsTotalPages: 0,
+			jobsError: 'Kunde inte hämta jobb från Platsbanken. Ladda om sidan.'
+		};
 	}
 }
 
-export const load: PageServerLoad = async () => {
-	const [draft, jobs] = await Promise.all([getCurrentDraft(), loadJobs()]);
+export const load: PageServerLoad = async ({ url }) => {
+	const page = parsePage(url.searchParams.get('page'), MAX_JOB_PAGE);
+	const [draft, jobs] = await Promise.all([getCurrentDraft(), loadJobs(page)]);
 	return { draft, ...jobs, articles: fetchArticles() };
 };
 
