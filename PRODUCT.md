@@ -25,7 +25,7 @@ Open decision: what sets it apart from other job and news newsletters has not be
 
 - Readers sign up on a public web page, then read issues as email.
 - The author works in a private admin area (`/admin`). There is always one draft issue: the one going out the coming week. The author adds job ads from Platsbanken, articles and own posts to it, and removes them again. Sending an issue starts the next week's draft.
-- Sending goes through a mail provider (not yet chosen).
+- Sending goes through Resend; see `EMAIL.md`. Until we have our own domain, Resend only delivers to the account owner.
 
 ## Capabilities and Constraints
 
@@ -38,9 +38,9 @@ In scope:
 
 Out of scope for now: a public web archive of past issues.
 
-Decided: the name (Juniorens nyhetsbrev), the topic (short news and job ads for juniors), a weekly cadence, and Vercel as the deploy target.
+Decided: the name (Juniorens nyhetsbrev), the topic (short news and job ads for juniors), a weekly cadence, Vercel as the deploy target, and Resend as the mail provider.
 
-Undecided: the mail provider, and where articles come from.
+Undecided: where articles come from, and the domain email is sent from.
 
 Never send real email or touch the production subscriber list during development.
 

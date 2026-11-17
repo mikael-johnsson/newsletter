@@ -8,7 +8,7 @@
 
 # Newsletter: project rules
 
-Juniorens nyhetsbrev: SvelteKit 3 + TypeScript, npm, Tailwind, Prisma on Neon Postgres, deployed to Vercel. A weekly newsletter for juniors: readers sign up on a public page (double opt-in), and the author builds each issue on `/admin` from job ads (Platsbanken, via the JobTech API), articles (source not chosen yet) and own posts. The mail provider is not chosen yet, so `mail.ts` only logs.
+Juniorens nyhetsbrev: SvelteKit 3 + TypeScript, npm, Tailwind, Prisma on Neon Postgres, deployed to Vercel. A weekly newsletter for juniors: readers sign up on a public page (double opt-in), and the author builds each issue on `/admin` from job ads (Platsbanken, via the JobTech API), articles (source not chosen yet) and own posts. Mail goes through Resend (see `EMAIL.md`), but `mail.ts` only logs until that is built.
 
 ## Commands
 
