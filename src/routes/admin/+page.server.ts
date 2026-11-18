@@ -11,6 +11,7 @@ import {
 	removeEntryFromDraft
 } from '#lib/server/newsletters.ts';
 import { parseOwnPost } from '#lib/server/own-post.ts';
+import { getOutgoingIssue, scheduleDraft } from '#lib/server/send-issue.ts';
 import { parsePage } from '#lib/pagination.ts';
 import {
 	DEFAULT_LIMIT,
@@ -52,8 +53,12 @@ async function loadJobs(
 export const load: PageServerLoad = async ({ url }) => {
 	const query = parseQuery(url.searchParams.get('q'));
 	const page = parsePage(url.searchParams.get('page'), MAX_JOB_PAGE);
-	const [draft, jobs] = await Promise.all([getCurrentDraft(), loadJobs(query, page)]);
-	return { draft, ...jobs, articles: fetchArticles() };
+	const [draft, outgoing, jobs] = await Promise.all([
+		getCurrentDraft(),
+		getOutgoingIssue(),
+		loadJobs(query, page)
+	]);
+	return { draft, outgoing, ...jobs, articles: fetchArticles() };
 };
 
 export const actions = {
@@ -137,6 +142,17 @@ export const actions = {
 			return fail(502, {
 				testError: 'Kunde inte skicka testmejlet. Kolla MAIL_TEST_TO och serverloggen.'
 			});
+		}
+	},
+
+	schedule: async () => {
+		try {
+			if ((await scheduleDraft()) === 'empty') {
+				return fail(400, { scheduleError: 'Utkastet är tomt. Lägg till något innan du skickar.' });
+			}
+		} catch (error) {
+			console.error('[newsletter] Scheduling failed', error);
+			return fail(502, { scheduleError: 'Kunde inte schemalägga brevet. Försök igen.' });
 		}
 	},
 

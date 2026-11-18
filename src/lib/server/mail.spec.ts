@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { env, emailsSend } = vi.hoisted(() => ({
+const { env, emailsSend, batchSend } = vi.hoisted(() => ({
 	env: {
 		MAIL_SEND: 'off' as 'off' | 'allowlist' | 'all',
 		MAIL_ALLOWLIST: [] as string[],
@@ -8,7 +8,8 @@ const { env, emailsSend } = vi.hoisted(() => ({
 		MAIL_FROM: 'Juniorens nyhetsbrev <onboarding@resend.dev>' as string | undefined,
 		RESEND_API_KEY: 're_test' as string | undefined
 	},
-	emailsSend: vi.fn()
+	emailsSend: vi.fn(),
+	batchSend: vi.fn()
 }));
 
 vi.mock('$app/env/private', () => ({
@@ -32,10 +33,11 @@ vi.mock('$app/env/private', () => ({
 vi.mock('resend', () => ({
 	Resend: class {
 		emails = { send: emailsSend };
+		batch = { send: batchSend };
 	}
 }));
 
-const { sendConfirmation, sendTestIssue } = await import('./mail.ts');
+const { sendBatch, sendConfirmation, sendTestIssue } = await import('./mail.ts');
 
 const to = 'delivered@resend.dev';
 const confirmUrl = 'https://example.test/confirm/token-1';
@@ -44,6 +46,7 @@ beforeEach(() => {
 	vi.clearAllMocks();
 	vi.spyOn(console, 'info').mockImplementation(() => {});
 	emailsSend.mockResolvedValue({ data: { id: 'email-1' }, error: null });
+	batchSend.mockResolvedValue({ data: { data: [] }, error: null });
 	Object.assign(env, {
 		MAIL_SEND: 'all',
 		MAIL_ALLOWLIST: [],
@@ -135,5 +138,37 @@ describe('sendTestIssue', () => {
 
 		await expect(sendTestIssue(issue)).rejects.toThrow('MAIL_TEST_TO');
 		expect(emailsSend).not.toHaveBeenCalled();
+	});
+});
+
+describe('sendBatch', () => {
+	const email = (to: string) => ({ to, subject: 'Vecka 48', html: '<p>Hej</p>', text: 'Hej' });
+
+	it('sends only allow-listed addresses in one call, with the given idempotency key', async () => {
+		env.MAIL_SEND = 'allowlist';
+		env.MAIL_ALLOWLIST = [to];
+
+		const sent = await sendBatch([email(to), email('reader@example.se')], 'issue/1/abc');
+
+		expect(sent).toBe(1);
+		const [payload, options] = batchSend.mock.calls[0];
+		expect(payload).toEqual([expect.objectContaining({ from: env.MAIL_FROM, to })]);
+		expect(options).toEqual({ idempotencyKey: 'issue/1/abc' });
+	});
+
+	it('never calls Resend when MAIL_SEND is off', async () => {
+		env.MAIL_SEND = 'off';
+
+		expect(await sendBatch([email(to)], 'issue/1/abc')).toBe(0);
+		expect(batchSend).not.toHaveBeenCalled();
+	});
+
+	it('throws when Resend refuses the batch', async () => {
+		batchSend.mockResolvedValue({
+			data: null,
+			error: { name: 'validation_error', message: 'Invalid `to` field' }
+		});
+
+		await expect(sendBatch([email(to)], 'issue/1/abc')).rejects.toThrow('validation_error');
 	});
 });

@@ -18,7 +18,7 @@ export function draftSubject(now: Date): string {
 	return `Nyhetsbrev vecka ${isoWeek(new Date(now.getTime() + 7 * DAY_MS))}`;
 }
 
-const withEntries = {
+export const withEntries = {
 	entries: { orderBy: { position: 'asc' }, include: { jobAd: true } }
 } as const;
 

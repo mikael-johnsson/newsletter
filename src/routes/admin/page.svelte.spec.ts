@@ -18,6 +18,7 @@ const job = {
 const props = {
 	data: {
 		draft: { id: 'draft-1', subject: 'Nyhetsbrev vecka 47', entries: [] },
+		outgoing: null,
 		jobs: [job],
 		jobsQuery: 'frontendutvecklare',
 		jobsPage: 1,
@@ -155,5 +156,46 @@ describe('admin test email', () => {
 		await expect
 			.element(screen.getByRole('status'))
 			.toHaveTextContent('Testmejl skickat till delivered@resend.dev.');
+	});
+});
+
+describe('admin send to everyone', () => {
+	const draftWithEntry = {
+		id: 'draft-1',
+		subject: 'Nyhetsbrev vecka 47',
+		entries: [{ id: 'entry-0', type: 'FREEHAND', title: 'Veckans tips', link: null, jobAd: null }]
+	};
+
+	it('asks for confirmation before sending', async () => {
+		const screen = await render(Page, {
+			...props,
+			data: { ...props.data, draft: draftWithEntry }
+		} as ComponentProps<typeof Page>);
+
+		await expect
+			.element(screen.getByRole('button', { name: 'Ja, skicka till alla' }))
+			.not.toBeInTheDocument();
+		await screen.getByText('Skicka till alla', { exact: true }).click();
+		await expect
+			.element(screen.getByRole('button', { name: 'Ja, skicka till alla' }))
+			.toBeVisible();
+	});
+
+	it('shows the issue on its way instead of the send button', async () => {
+		const screen = await render(Page, {
+			...props,
+			data: {
+				...props.data,
+				draft: draftWithEntry,
+				outgoing: { subject: 'Nyhetsbrev vecka 46', status: 'SENDING', _count: { deliveries: 200 } }
+			}
+		} as unknown as ComponentProps<typeof Page>);
+
+		await expect
+			.element(screen.getByText('Nyhetsbrev vecka 46 skickas nu, 200 klara.'))
+			.toBeVisible();
+		await expect
+			.element(screen.getByText('Skicka till alla', { exact: true }))
+			.not.toBeInTheDocument();
 	});
 });

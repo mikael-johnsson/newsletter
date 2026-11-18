@@ -8,13 +8,14 @@ datasource db {
 }
 
 model Subscriber {
-  id               String    @id @default(cuid())
-  email            String    @unique
-  unsubscribeToken String    @unique @default(cuid())
-  confirmToken     String?   @unique
+  id               String     @id @default(cuid())
+  email            String     @unique
+  unsubscribeToken String     @unique @default(cuid())
+  confirmToken     String?    @unique
   confirmedAt      DateTime?
-  createdAt        DateTime  @default(now())
+  createdAt        DateTime   @default(now())
   unsubscribedAt   DateTime?
+  deliveries       Delivery[]
 }
 
 enum NewsletterStatus {
@@ -33,8 +34,20 @@ model Newsletter {
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
   entries      Entry[]
+  deliveries   Delivery[]
 
   @@index([status, scheduledFor])
+}
+
+// Who has received which issue, so a send can resume and nobody gets an issue twice.
+model Delivery {
+  newsletterId String
+  subscriberId String
+  sentAt       DateTime   @default(now())
+  newsletter   Newsletter @relation(fields: [newsletterId], references: [id], onDelete: Cascade)
+  subscriber   Subscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+
+  @@id([newsletterId, subscriberId])
 }
 
 enum EntryType {

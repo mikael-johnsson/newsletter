@@ -79,6 +79,34 @@
 					<p role="alert" class="font-bold">{form.testError}</p>
 				{/if}
 			</form>
+
+			{#if data.outgoing}
+				<p role="status" class="font-bold">
+					{data.outgoing.subject}
+					{data.outgoing.status === 'SENDING'
+						? `skickas nu, ${data.outgoing._count.deliveries} klara.`
+						: 'skickas vid nästa utskick.'}
+				</p>
+			{:else if data.draft.entries.length > 0}
+				<details class="flex flex-col items-start gap-4">
+					<summary
+						class="w-fit cursor-pointer rounded-pill bg-primary px-6 py-2 font-bold text-ink focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink"
+					>
+						Skicka till alla
+					</summary>
+					<form method="POST" action="?/schedule" use:enhance class="mt-4 flex flex-col gap-4">
+						<p>Brevet går till alla bekräftade prenumeranter och kan inte ångras.</p>
+						<button
+							class="w-fit rounded-pill bg-ink px-6 py-2 font-bold text-paper focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink"
+						>
+							Ja, skicka till alla
+						</button>
+					</form>
+				</details>
+			{/if}
+			{#if form?.scheduleError}
+				<p role="alert" class="font-bold">{form.scheduleError}</p>
+			{/if}
 		</div>
 
 		<section>

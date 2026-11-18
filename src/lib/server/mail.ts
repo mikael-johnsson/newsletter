@@ -8,7 +8,7 @@ import {
 } from '$app/env/private';
 import type { RenderedIssue } from './issue-email.ts';
 
-type Email = {
+export type Email = {
 	to: string;
 	subject: string;
 	html: string;
@@ -27,25 +27,60 @@ function isAllowed(to: string): boolean {
 	return false;
 }
 
-async function send(email: Email): Promise<SendResult> {
-	if (!isAllowed(email.to)) {
-		console.info(
-			`[mail] Not sent (MAIL_SEND=${MAIL_SEND}) to ${email.to}: ${email.subject}\n${email.text}`
-		);
-		return 'logged';
-	}
+function logNotSent(email: Email): void {
+	console.info(
+		`[mail] Not sent (MAIL_SEND=${MAIL_SEND}) to ${email.to}: ${email.subject}\n${email.text}`
+	);
+}
+
+function getClient(): { client: Resend; from: string } {
 	if (!RESEND_API_KEY || !MAIL_FROM) {
 		throw new Error('MAIL_SEND is on, but RESEND_API_KEY or MAIL_FROM is missing');
 	}
-
 	client ??= new Resend(RESEND_API_KEY);
+	return { client, from: MAIL_FROM };
+}
+
+async function send(email: Email): Promise<SendResult> {
+	if (!isAllowed(email.to)) {
+		logNotSent(email);
+		return 'logged';
+	}
+
+	const { client, from } = getClient();
 	const { to, subject, html, text, headers, idempotencyKey } = email;
 	const { error } = await client.emails.send(
-		{ from: MAIL_FROM, to, subject, html, text, headers },
+		{ from, to, subject, html, text, headers },
 		idempotencyKey ? { idempotencyKey } : undefined
 	);
 	if (error) throw new Error(`Resend refused the email: ${error.name}: ${error.message}`);
 	return 'sent';
+}
+
+export const BATCH_SIZE = 100;
+
+// Resend's strict batch validation fails the whole call on one bad email, so a batch is never half sent.
+export async function sendBatch(emails: Email[], idempotencyKey: string): Promise<number> {
+	if (emails.length > BATCH_SIZE) throw new Error(`A batch holds at most ${BATCH_SIZE} emails`);
+
+	const allowed = emails.filter((email) => isAllowed(email.to));
+	emails.filter((email) => !isAllowed(email.to)).forEach(logNotSent);
+	if (allowed.length === 0) return 0;
+
+	const { client, from } = getClient();
+	const { error } = await client.batch.send(
+		allowed.map(({ to, subject, html, text, headers }) => ({
+			from,
+			to,
+			subject,
+			html,
+			text,
+			headers
+		})),
+		{ idempotencyKey }
+	);
+	if (error) throw new Error(`Resend refused the batch: ${error.name}: ${error.message}`);
+	return allowed.length;
 }
 
 // No idempotency key: every click should send, so the author sees each change.

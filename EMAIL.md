@@ -42,6 +42,17 @@ The cron flow in `ARCHITECTURE.md` stays as it is. Resend only fills in `mail.ts
 - Batch calls don't support attachments, and issues don't need them.
 - We don't use Resend's `scheduled_at`. Scheduling lives in `Newsletter.scheduledFor` and Vercel Cron, so it is done in one place only.
 
+### Vercel Cron is moving to Schedules
+
+[Vercel's docs](https://vercel.com/docs/schedules/cron-jobs) call Cron Jobs a legacy feature that "will be migrated to Schedules in the future". No date is given, and Schedules are still in beta. We use Cron Jobs (`crons` in `vercel.json`) until Schedules are stable. Moving over is a config change only; the route code stays:
+
+- Move the entry from `crons` to `schedules` and remove `crons` in the same change, or the route runs twice:
+  `{ "schedules": { "send-issues": { "schedule": "…", "path": "/api/cron/send", "requestMethod": "GET" } } }`
+- Set `requestMethod: "GET"`: Schedules default to `POST`, which our endpoint doesn't handle.
+- `CRON_SECRET` works the same: path targets get `Authorization: Bearer <CRON_SECRET>`.
+- On Hobby, Schedules can run every 15 minutes (with up to 15 minutes' jitter) instead of once a day, so "Skicka nu" would go out much sooner.
+- Schedules can also run on preview deployments (off by default). Leave that off: a preview run would send with the preview's URL in the unsubscribe links, from the preview's database.
+
 ### Unsubscribe
 
 With `/emails` we handle unsubscribes ourselves, and Resend requires it for newsletter mail:
