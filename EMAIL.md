@@ -50,9 +50,9 @@ With `/emails` we handle unsubscribes ourselves, and Resend requires it for news
 - Headers on every issue:
   - `List-Unsubscribe: <https://…/unsubscribe/[token]>`
   - `List-Unsubscribe-Post: List-Unsubscribe=One-Click` (RFC 8058, which Gmail and Yahoo require from bulk senders)
-- `/unsubscribe/[token]` needs both a page (GET) and a **POST handler** for the one-click request that mail clients send.
+- `/unsubscribe/[token]` shows a confirm page on GET and unsubscribes only in its **default form action**. GET must never unsubscribe, because link scanners such as Outlook Safe Links open every link. The mail client's one-click POST goes to the bare URL from the header, so only a default action receives it, and it gets a plain 200, no redirect.
 
-**Watch out:** the one-click POST comes from another site, and SvelteKit's CSRF check rejects cross-site form posts by default. That route has to be exempt. Check how the current SvelteKit version allows it before building it.
+**CSRF:** the one-click POST comes from another site, usually with no `Origin` header, and SvelteKit's own check rejects it before any hook runs. So `vite.config.ts` turns SvelteKit's check off (`csrf: { trustedOrigins: ['*'] }`), and `src/lib/server/csrf.ts` does the same check first thing in `handle`, except for paths matching `^/unsubscribe/[^/]+$`. Every other route keeps the protection. Unlike SvelteKit's check, ours also runs in `npm run dev`; still confirm `trustedOrigins` on a production build (`npm run build && npx vite preview`), since only there would SvelteKit's check block one-click.
 
 ### Bounces and complaints
 

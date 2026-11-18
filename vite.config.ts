@@ -14,7 +14,9 @@ export default defineConfig({
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
 
-			adapter: adapter()
+			adapter: adapter(),
+			// Our own check in hooks.server.ts replaces this one, so one-click unsubscribe can get through.
+			csrf: { trustedOrigins: ['*'] }
 		})
 	],
 	test: {

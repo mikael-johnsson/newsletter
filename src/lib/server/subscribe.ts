@@ -41,3 +41,16 @@ export async function confirmSubscription(token: string): Promise<boolean> {
 	}
 	return true;
 }
+
+export async function unsubscribe(token: string): Promise<boolean> {
+	const subscriber = await db.subscriber.findUnique({ where: { unsubscribeToken: token } });
+	if (!subscriber) return false;
+
+	if (!subscriber.unsubscribedAt) {
+		await db.subscriber.update({
+			where: { id: subscriber.id },
+			data: { unsubscribedAt: new Date() }
+		});
+	}
+	return true;
+}

@@ -1,7 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from './db.ts';
 import { sendConfirmation } from './mail.ts';
-import { confirmSubscription, isValidEmail, normalizeEmail, subscribe } from './subscribe.ts';
+import {
+	confirmSubscription,
+	isValidEmail,
+	normalizeEmail,
+	subscribe,
+	unsubscribe
+} from './subscribe.ts';
 
 vi.mock('./db.ts', () => ({
 	db: { subscriber: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() } }
@@ -125,6 +131,29 @@ describe('confirmSubscription', () => {
 		);
 
 		expect(await confirmSubscription('old-token')).toBe(false);
+		expect(update).not.toHaveBeenCalled();
+	});
+});
+
+describe('unsubscribe', () => {
+	it('rejects an unknown token without writing', async () => {
+		findUnique.mockResolvedValue(null);
+
+		expect(await unsubscribe('nope')).toBe(false);
+		expect(update).not.toHaveBeenCalled();
+	});
+
+	it('marks a reader as unsubscribed', async () => {
+		findUnique.mockResolvedValue(subscriber({ confirmedAt: new Date() }));
+
+		expect(await unsubscribe('unsub')).toBe(true);
+		expect(update.mock.calls[0][0].data.unsubscribedAt).toBeInstanceOf(Date);
+	});
+
+	it('keeps the first date when unsubscribing twice', async () => {
+		findUnique.mockResolvedValue(subscriber({ unsubscribedAt: new Date('2026-01-01') }));
+
+		expect(await unsubscribe('unsub')).toBe(true);
 		expect(update).not.toHaveBeenCalled();
 	});
 });
