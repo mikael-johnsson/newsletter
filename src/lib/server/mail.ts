@@ -96,11 +96,11 @@ export async function sendTestIssue(
 export async function sendConfirmation(to: string, confirmUrl: string): Promise<void> {
 	await send({
 		to,
-		subject: 'Bekräfta din prenumeration på Juniorens nyhetsbrev',
+		subject: 'Bekräfta din prenumeration på nyhetsbrevet Push to Main',
 		text: [
 			'Hej!',
 			'',
-			'Klicka på länken för att bekräfta att du vill få Juniorens nyhetsbrev en gång i veckan:',
+			'Klicka på länken för att bekräfta att du vill få Push to Main en gång i veckan:',
 			confirmUrl,
 			'',
 			'Har du inte anmält dig? Då kan du ignorera det här mejlet.'
@@ -109,7 +109,7 @@ export async function sendConfirmation(to: string, confirmUrl: string): Promise<
 <html lang="sv">
 <body style="margin:0;padding:24px;background:#FFF8EE;color:#141414;font-family:Inter,Arial,sans-serif;font-size:18px;line-height:1.5">
 <p>Hej!</p>
-<p>Klicka på knappen för att bekräfta att du vill få Juniorens nyhetsbrev en gång i veckan.</p>
+<p>Klicka på knappen för att bekräfta att du vill få Push to Main en gång i veckan.</p>
 <p><a href="${confirmUrl}" style="display:inline-block;padding:12px 20px;background:#FF4D2E;color:#141414;font-weight:700;text-decoration:none;border-radius:8px">Bekräfta prenumerationen</a></p>
 <p style="color:#6B6459;font-size:15px">Har du inte anmält dig? Då kan du ignorera det här mejlet.</p>
 </body>

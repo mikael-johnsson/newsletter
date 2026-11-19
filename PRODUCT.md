@@ -13,7 +13,7 @@ web
 
 ## Product Purpose
 
-A personal newsletter, **Juniorens nyhetsbrev**: one author writing to their own readership, once a week. The product lets readers subscribe, lets the author put together and send issues by email, and lets the author manage the subscriber list. An issue is an ordered list of entries: job ads, articles and the author's own posts. Success means readers sign up and the author can publish without friction.
+A personal newsletter, **Nyhetsbrevet Push to Main**: one author writing to their own readership, once a week. The product lets readers subscribe, lets the author put together and send issues by email, and lets the author manage the subscriber list. An issue is an ordered list of entries: job ads, articles and the author's own posts. Success means readers sign up and the author can publish without friction.
 
 ## Positioning
 
@@ -38,7 +38,7 @@ In scope:
 
 Out of scope for now: a public web archive of past issues.
 
-Decided: the name (Juniorens nyhetsbrev), the topic (short news and job ads for juniors), a weekly cadence, Vercel as the deploy target, and Resend as the mail provider.
+Decided: the name (Nyhetsbrevet Push to Main), the topic (short news and job ads for juniors), a weekly cadence, Vercel as the deploy target, and Resend as the mail provider.
 
 Undecided: where articles come from, and the domain email is sent from.
 
