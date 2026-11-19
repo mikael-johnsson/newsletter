@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "createdAt": "2026-11-17T16:06:03.770Z",
+        "reason": "DESIGN.md sets Inter as the body font (typography body, line 25); the email mirrors the design system"
+      }
+    ]
+  }
+}

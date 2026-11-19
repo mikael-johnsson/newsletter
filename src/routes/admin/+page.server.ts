@@ -1,0 +1,174 @@
+import { fail, redirect } from '@sveltejs/kit';
+import { SESSION_COOKIE } from '#lib/server/session.ts';
+import { fetchArticles } from '#lib/server/articles.ts';
+import { renderIssue } from '#lib/server/issue-email.ts';
+import { sendTestIssue } from '#lib/server/mail.ts';
+import {
+	addArticleToDraft,
+	addJobAdToDraft,
+	addOwnPostToDraft,
+	getCurrentDraft,
+	removeEntryFromDraft
+} from '#lib/server/newsletters.ts';
+import { parseOwnPost } from '#lib/server/own-post.ts';
+import { getOutgoingIssue, scheduleDraft } from '#lib/server/send-issue.ts';
+import { parsePage } from '#lib/pagination.ts';
+import {
+	DEFAULT_LIMIT,
+	MAX_OFFSET,
+	parseQuery,
+	searchJobAds,
+	type JobAd
+} from '#lib/server/platsbanken.ts';
+import type { Actions, PageServerLoad } from './$types';
+
+const MAX_JOB_PAGE = Math.floor(MAX_OFFSET / DEFAULT_LIMIT) + 1;
+
+async function loadJobs(
+	query: string,
+	page: number
+): Promise<{
+	jobs: JobAd[];
+	jobsQuery: string;
+	jobsPage: number;
+	jobsTotalPages: number;
+	jobsError: string | null;
+}> {
+	try {
+		const { jobs, total } = await searchJobAds({ query, offset: (page - 1) * DEFAULT_LIMIT });
+		const jobsTotalPages = Math.min(Math.ceil(total / DEFAULT_LIMIT), MAX_JOB_PAGE);
+		return { jobs, jobsQuery: query, jobsPage: page, jobsTotalPages, jobsError: null };
+	} catch (error) {
+		console.error('[jobs] Platsbanken search failed', error);
+		return {
+			jobs: [],
+			jobsQuery: query,
+			jobsPage: page,
+			jobsTotalPages: 0,
+			jobsError: 'Kunde inte hämta jobb från Platsbanken. Ladda om sidan.'
+		};
+	}
+}
+
+export const load: PageServerLoad = async ({ url }) => {
+	const query = parseQuery(url.searchParams.get('q'));
+	const page = parsePage(url.searchParams.get('page'), MAX_JOB_PAGE);
+	const [draft, outgoing, jobs] = await Promise.all([
+		getCurrentDraft(),
+		getOutgoingIssue(),
+		loadJobs(query, page)
+	]);
+	return { draft, outgoing, ...jobs, articles: fetchArticles() };
+};
+
+export const actions = {
+	logout: ({ cookies }) => {
+		cookies.delete(SESSION_COOKIE, { path: '/' });
+		redirect(303, '/');
+	},
+
+	addJob: async ({ request }) => {
+		const platsbankenId = (await request.formData()).get('platsbankenId');
+		if (typeof platsbankenId !== 'string' || !/^\d+$/.test(platsbankenId)) {
+			return fail(400, { addError: 'Ogiltig annons.' });
+		}
+
+		try {
+			const result = await addJobAdToDraft(platsbankenId);
+			if (result === 'not-found') {
+				return fail(404, { addError: 'Annonsen finns inte längre på Platsbanken.' });
+			}
+		} catch (error) {
+			console.error('[newsletter] Adding job ad failed', error);
+			return fail(502, { addError: 'Kunde inte lägga till annonsen. Försök igen.' });
+		}
+	},
+
+	addArticle: async ({ request }) => {
+		const link = (await request.formData()).get('link');
+		if (typeof link !== 'string' || !URL.canParse(link) || link.length > 2048) {
+			return fail(400, { addError: 'Ogiltig artikel.' });
+		}
+
+		try {
+			const result = await addArticleToDraft(link);
+			if (result === 'not-found') {
+				return fail(404, { addError: 'Artikeln finns inte längre i flödet.' });
+			}
+		} catch (error) {
+			console.error('[newsletter] Adding article failed', error);
+			return fail(502, { addError: 'Kunde inte lägga till artikeln. Försök igen.' });
+		}
+	},
+
+	addOwnPost: async ({ request }) => {
+		const parsed = parseOwnPost(await request.formData());
+		if (!('post' in parsed)) return fail(400, { ownPost: parsed });
+
+		try {
+			await addOwnPostToDraft(parsed.post);
+		} catch (error) {
+			console.error('[newsletter] Adding own post failed', error);
+			const { title, url, text } = parsed.post;
+			return fail(502, {
+				ownPost: {
+					values: { title, url: url ?? '', text },
+					errors: { form: 'Kunde inte lägga till inlägget. Försök igen.' }
+				}
+			});
+		}
+	},
+
+	sendTest: async ({ url }) => {
+		const draft = await getCurrentDraft();
+		if (draft.entries.length === 0) {
+			return fail(400, {
+				testError: 'Utkastet är tomt. Lägg till något innan du skickar ett test.'
+			});
+		}
+
+		try {
+			// No reader has the token "test", so the unsubscribe link in a test email changes nothing.
+			const issue = renderIssue(draft, `${url.origin}/unsubscribe/test`);
+			const { to, result } = await sendTestIssue(issue);
+			return {
+				testSent:
+					result === 'sent'
+						? `Testmejl skickat till ${to}.`
+						: `Inte skickat: MAIL_SEND släpper inte igenom ${to}. Mejlet finns i serverloggen.`
+			};
+		} catch (error) {
+			console.error('[mail] Test email failed', error);
+			return fail(502, {
+				testError: 'Kunde inte skicka testmejlet. Kolla MAIL_TEST_TO och serverloggen.'
+			});
+		}
+	},
+
+	schedule: async () => {
+		try {
+			if ((await scheduleDraft()) === 'empty') {
+				return fail(400, { scheduleError: 'Utkastet är tomt. Lägg till något innan du skickar.' });
+			}
+		} catch (error) {
+			console.error('[newsletter] Scheduling failed', error);
+			return fail(502, { scheduleError: 'Kunde inte schemalägga brevet. Försök igen.' });
+		}
+	},
+
+	removeEntry: async ({ request }) => {
+		const entryId = (await request.formData()).get('entryId');
+		if (typeof entryId !== 'string' || !/^[a-z0-9]{1,64}$/i.test(entryId)) {
+			return fail(400, { removeError: 'Ogiltigt inlägg.' });
+		}
+
+		try {
+			if (!(await removeEntryFromDraft(entryId))) {
+				return fail(404, { removeError: 'Inlägget finns inte i utkastet.' });
+			}
+		} catch (error) {
+			console.error('[newsletter] Removing entry failed', error);
+			return fail(502, { removeError: 'Kunde inte ta bort inlägget. Försök igen.' });
+		}
+	}
+} satisfies Actions;
