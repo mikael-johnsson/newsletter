@@ -1,3 +1,5 @@
 {
-	"crons": [{ "path": "/api/cron/send", "schedule": "0 7 * * *" }]
+	"schedules": {
+		"weeklyEmail": { "path": "/api/cron/send", "schedule": "0 7 * * *", "requestMethod": "GET" }
+	}
 }
