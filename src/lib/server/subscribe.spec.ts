@@ -30,6 +30,7 @@ function subscriber(fields: Record<string, unknown>) {
 		confirmToken: 'old-token',
 		confirmedAt: null,
 		unsubscribedAt: null,
+		bouncedAt: null,
 		createdAt: new Date(),
 		...fields
 	} as Awaited<ReturnType<typeof db.subscriber.findUnique>>;
@@ -109,6 +110,18 @@ describe('subscribe', () => {
 		expect(data.confirmToken).not.toBe('old-token');
 		expect(send).toHaveBeenCalledWith(email, `${origin}/confirm/${data.confirmToken}`);
 	});
+
+	it('makes a bounced reader confirm again with a new link, keeping bouncedAt until then', async () => {
+		findUnique.mockResolvedValue(subscriber({ confirmedAt: new Date(), bouncedAt: new Date() }));
+
+		await subscribe(email, origin);
+
+		const { data } = update.mock.calls[0][0];
+		expect(data).toMatchObject({ confirmedAt: null });
+		expect(data).not.toHaveProperty('bouncedAt');
+		expect(data.confirmToken).not.toBe('old-token');
+		expect(send).toHaveBeenCalledWith(email, `${origin}/confirm/${data.confirmToken}`);
+	});
 });
 
 describe('confirmSubscription', () => {
@@ -117,6 +130,13 @@ describe('confirmSubscription', () => {
 
 		expect(await confirmSubscription('old-token')).toBe(true);
 		expect(update.mock.calls[0][0].data.confirmedAt).toBeInstanceOf(Date);
+	});
+
+	it('clears bouncedAt when a returning bounced reader confirms', async () => {
+		findUnique.mockResolvedValue(subscriber({ bouncedAt: new Date('2026-11-01') }));
+
+		expect(await confirmSubscription('old-token')).toBe(true);
+		expect(update.mock.calls[0][0].data).toMatchObject({ bouncedAt: null });
 	});
 
 	it('rejects an unknown token', async () => {

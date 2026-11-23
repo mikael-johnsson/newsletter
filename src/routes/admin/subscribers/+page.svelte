@@ -9,6 +9,7 @@
 	const labels: Record<SubscriberStatus, string> = {
 		confirmed: 'Bekräftad',
 		pending: 'Väntar på bekräftelse',
+		bounced: 'Studsad',
 		unsubscribed: 'Avregistrerad'
 	};
 
@@ -27,7 +28,7 @@
 <main class="mx-auto px-4 py-16">
 	<h1 class="font-display text-h2 sm:text-display">Prenumeranter</h1>
 
-	<dl class="mt-16 grid grid-cols-1 gap-4 sm:grid-cols-3">
+	<dl class="mt-16 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 		{#each Object.entries(labels) as [status, label] (status)}
 			<div class="rounded-md bg-ink/5 p-4 sm:p-8">
 				<dt class="text-muted">{label}</dt>

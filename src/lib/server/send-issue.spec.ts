@@ -77,7 +77,7 @@ describe('batchKey', () => {
 });
 
 describe('sendNextBatch', () => {
-	it('picks the next 100 confirmed, subscribed readers without a delivery, in id order', async () => {
+	it('picks the next 100 confirmed, subscribed, unbounced readers without a delivery, in id order', async () => {
 		findReaders.mockResolvedValue([reader('a')] as never);
 
 		await sendNextBatch(issue, origin);
@@ -86,6 +86,7 @@ describe('sendNextBatch', () => {
 			where: {
 				confirmedAt: { not: null },
 				unsubscribedAt: null,
+				bouncedAt: null,
 				deliveries: { none: { newsletterId: 'issue-1' } }
 			},
 			orderBy: { id: 'asc' },

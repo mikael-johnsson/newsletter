@@ -67,10 +67,11 @@ With `/emails` we handle unsubscribes ourselves, and Resend requires it for news
 
 ### Bounces and complaints
 
-A webhook endpoint, `/api/webhooks/resend`, sets `unsubscribedAt` on `email.bounced` and `email.complained`.
+A webhook endpoint, `/api/webhooks/resend`, sets `bouncedAt` on `email.bounced` and `unsubscribedAt` on `email.complained` (a spam complaint counts as unsubscribing). Sending skips both. A bounced reader who signs up and confirms again gets `bouncedAt` cleared.
 
-- Resend signs webhooks with Svix. Verify the **raw** request body with `resend.webhooks.verify(...)` or the `svix` package, never re-serialized JSON.
-- Retries reuse the same `svix-id` header, so ignore events already handled.
+- Resend signs webhooks with Svix. Verify the **raw** request body with `resend.webhooks.verify(...)`, never re-serialized JSON. A wrong signature gets 400.
+- Retries reuse the same `svix-id` header. Fields are only set when empty, so a repeated event changes nothing and event ids aren't stored.
+- Other events and unknown addresses get 200, so Resend doesn't retry them.
 - The free plan allows 1 webhook endpoint, which is all we need.
 
 ## Configuration
