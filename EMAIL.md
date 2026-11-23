@@ -77,11 +77,11 @@ A webhook endpoint, `/api/webhooks/resend`, sets `unsubscribedAt` on `email.boun
 
 To add to `.env.example` and `src/env.ts`, read only in `src/lib/server/`:
 
-| Variable                | Value                                                  |
-| ----------------------- | ------------------------------------------------------ |
-| `RESEND_API_KEY`        | API key from the Resend dashboard                      |
-| `MAIL_FROM`             | `Juniorens nyhetsbrev <onboarding@resend.dev>` for now |
-| `RESEND_WEBHOOK_SECRET` | The webhook's signing secret                           |
+| Variable                | Value                                          |
+| ----------------------- | ---------------------------------------------- |
+| `RESEND_API_KEY`        | API key from the Resend dashboard              |
+| `MAIL_FROM`             | `Push to Main <onboarding@resend.dev>` for now |
+| `RESEND_WEBHOOK_SECRET` | The webhook's signing secret                   |
 
 `mail.ts` keeps its safety rule: outside production it logs, or sends only to an allow-listed test address.
 

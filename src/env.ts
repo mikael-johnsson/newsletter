@@ -34,8 +34,7 @@ export const variables = defineEnvVars({
 		schema: (value) => value?.trim().toLowerCase() || undefined
 	},
 	MAIL_FROM: {
-		description:
-			'Sender, e.g. `Juniorens nyhetsbrev <onboarding@resend.dev>`; needed unless MAIL_SEND=off',
+		description: 'Sender, e.g. `Push to Main <onboarding@resend.dev>`; needed unless MAIL_SEND=off',
 		schema: (value) => value || undefined
 	},
 	RESEND_API_KEY: {

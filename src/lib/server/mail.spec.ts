@@ -5,7 +5,7 @@ const { env, emailsSend, batchSend } = vi.hoisted(() => ({
 		MAIL_SEND: 'off' as 'off' | 'allowlist' | 'all',
 		MAIL_ALLOWLIST: [] as string[],
 		MAIL_TEST_TO: 'delivered@resend.dev' as string | undefined,
-		MAIL_FROM: 'Juniorens nyhetsbrev <onboarding@resend.dev>' as string | undefined,
+		MAIL_FROM: 'Push to Main <onboarding@resend.dev>' as string | undefined,
 		RESEND_API_KEY: 're_test' as string | undefined
 	},
 	emailsSend: vi.fn(),
@@ -51,7 +51,7 @@ beforeEach(() => {
 		MAIL_SEND: 'all',
 		MAIL_ALLOWLIST: [],
 		MAIL_TEST_TO: 'delivered@resend.dev',
-		MAIL_FROM: 'Juniorens nyhetsbrev <onboarding@resend.dev>',
+		MAIL_FROM: 'Push to Main <onboarding@resend.dev>',
 		RESEND_API_KEY: 're_test'
 	});
 });

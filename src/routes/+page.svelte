@@ -16,7 +16,7 @@
 </header>
 
 <main class="mx-auto max-w-prose px-4 py-16">
-	<h1 class="font-display text-h2 sm:text-display">Juniorens nyhetsbrev</h1>
+	<h1 class="font-display text-h2 sm:text-display">Nyhetsbrevet Push to Main</h1>
 	<p class="mt-8 text-body">
 		Korta nyheter och jobbannonser anpassade för din plats i karriären. Brevet kommer en gång i
 		veckan - aldrig oftare.
