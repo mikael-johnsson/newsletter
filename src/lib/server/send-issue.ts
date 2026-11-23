@@ -48,6 +48,7 @@ export async function sendNextBatch(
 		where: {
 			confirmedAt: { not: null },
 			unsubscribedAt: null,
+			bouncedAt: null,
 			deliveries: { none: { newsletterId: issue.id } }
 		},
 		orderBy: { id: 'asc' },
