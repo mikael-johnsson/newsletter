@@ -15,13 +15,14 @@ export function isValidEmail(email: string): boolean {
 // Every path that doesn't throw looks the same to the caller, so the form never reveals who is on the list.
 export async function subscribe(email: string, origin: string): Promise<void> {
 	const existing = await db.subscriber.findUnique({ where: { email } });
-	if (existing?.confirmedAt && !existing.unsubscribedAt) return;
+	if (existing?.confirmedAt && !existing.unsubscribedAt && !existing.bouncedAt) return;
 
 	let token = existing?.confirmToken;
 	if (!existing) {
 		token = randomUUID();
 		await db.subscriber.create({ data: { email, confirmToken: token } });
-	} else if (existing.unsubscribedAt || !token) {
+	} else if (existing.unsubscribedAt || existing.bouncedAt || !token) {
+		// bouncedAt stays until the reader confirms, so the address is proven to work again.
 		token = randomUUID();
 		await db.subscriber.update({
 			where: { id: existing.id },
@@ -37,7 +38,10 @@ export async function confirmSubscription(token: string): Promise<boolean> {
 	if (!subscriber || subscriber.unsubscribedAt) return false;
 
 	if (!subscriber.confirmedAt) {
-		await db.subscriber.update({ where: { id: subscriber.id }, data: { confirmedAt: new Date() } });
+		await db.subscriber.update({
+			where: { id: subscriber.id },
+			data: { confirmedAt: new Date(), bouncedAt: null }
+		});
 	}
 	return true;
 }

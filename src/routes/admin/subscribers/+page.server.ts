@@ -10,7 +10,7 @@ export const load: PageServerLoad = async ({ url, setHeaders }) => {
 	setHeaders({ 'cache-control': 'private, no-store' });
 
 	const counts = await getSubscriberCounts();
-	const total = counts.confirmed + counts.pending + counts.unsubscribed;
+	const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
 	const totalPages = Math.max(1, Math.ceil(total / SUBSCRIBERS_PER_PAGE));
 	const page = parsePage(url.searchParams.get('page'), totalPages);
 
