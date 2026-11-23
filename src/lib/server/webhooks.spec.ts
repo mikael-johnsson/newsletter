@@ -3,10 +3,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from './db.ts';
 import { handleResendWebhook, type SvixHeaders } from './webhooks.ts';
 
-const SECRET_BYTES = Buffer.from('test-signing-secret');
+const { secret } = vi.hoisted(() => ({ secret: Buffer.from('test-signing-secret') }));
 
 vi.mock('$app/env/private', () => ({
-	RESEND_WEBHOOK_SECRET: `whsec_${Buffer.from('test-signing-secret').toString('base64')}`
+	RESEND_WEBHOOK_SECRET: `whsec_${secret.toString('base64')}`
 }));
 vi.mock('./db.ts', () => ({ db: { subscriber: { updateMany: vi.fn() } } }));
 
@@ -18,9 +18,7 @@ function signed(event: object): { payload: string; headers: SvixHeaders } {
 	const payload = JSON.stringify(event);
 	const id = 'msg_1';
 	const timestamp = String(Math.floor(Date.now() / 1000));
-	const mac = createHmac('sha256', SECRET_BYTES)
-		.update(`${id}.${timestamp}.${payload}`)
-		.digest('base64');
+	const mac = createHmac('sha256', secret).update(`${id}.${timestamp}.${payload}`).digest('base64');
 	return { payload, headers: { id, timestamp, signature: `v1,${mac}` } };
 }
 
