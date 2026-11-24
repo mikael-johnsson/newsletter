@@ -41,6 +41,11 @@ export const variables = defineEnvVars({
 		description: 'Resend API key (sending access is enough); needed unless MAIL_SEND=off',
 		schema: (value) => value || undefined
 	},
+	SITE_URL: {
+		description:
+			'Public address of the site, e.g. `https://example.se`; links in issues sent by /api/cron/send point here',
+		schema: (value) => (value ? new URL(value).origin : undefined)
+	},
 	CRON_SECRET: {
 		description:
 			'Random string Vercel sends as `Authorization: Bearer …` to /api/cron/send; without it the endpoint refuses every call',
