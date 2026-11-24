@@ -46,6 +46,11 @@ export const variables = defineEnvVars({
 			'Public address of the site, e.g. `https://example.se`; links in issues sent by /api/cron/send point here',
 		schema: (value) => (value ? new URL(value).origin : undefined)
 	},
+	RESEND_WEBHOOK_SECRET: {
+		description:
+			'Signing secret (`whsec_…`) of the Resend webhook; without it /api/webhooks/resend refuses every call',
+		schema: (value) => value || undefined
+	},
 	CRON_SECRET: {
 		description:
 			'Random string Vercel sends as `Authorization: Bearer …` to /api/cron/send; without it the endpoint refuses every call',

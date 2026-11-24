@@ -15,6 +15,7 @@ model Subscriber {
   confirmedAt      DateTime?
   createdAt        DateTime   @default(now())
   unsubscribedAt   DateTime?
+  bouncedAt        DateTime?
   deliveries       Delivery[]
 }
 
