@@ -12,7 +12,7 @@ function entry(fields: Partial<Entry>): Entry {
 		title: 'Titel',
 		link: null,
 		summary: 'Sammanfattning',
-		source: 'Eget inlägg',
+		source: 'Från redaktören',
 		jobAd: null,
 		createdAt: new Date(),
 		updatedAt: new Date(),
@@ -53,6 +53,27 @@ describe('renderIssue', () => {
 		for (const output of [html, text]) {
 			expect(output.indexOf('Först')).toBeLessThan(output.indexOf('Sedan'));
 			expect(output.indexOf('Sedan')).toBeLessThan(output.indexOf('Sist'));
+		}
+	});
+
+	it('groups entries under Läsvärt!, Annonser and Annat... and leaves out empty sections', () => {
+		const { html, text } = renderIssue(
+			{
+				subject: 'Vecka 47',
+				entries: [
+					entry({ id: 'a', type: 'FREEHAND', title: 'Veckans tips' }),
+					entry({ id: 'b', type: 'ARTICLE', title: 'Artikel' })
+				]
+			},
+			unsubscribeUrl
+		);
+
+		for (const output of [html, text]) {
+			const order = ['Läsvärt!', 'Artikel', 'Annat...', 'Veckans tips'].map((s) =>
+				output.indexOf(s)
+			);
+			expect(order.every((index, i) => index > (order[i - 1] ?? -1))).toBe(true);
+			expect(output).not.toContain('Annonser');
 		}
 	});
 

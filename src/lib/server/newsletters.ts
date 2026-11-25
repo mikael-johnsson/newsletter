@@ -6,16 +6,18 @@ import { getJobAd } from './platsbanken.ts';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export function isoWeek(date: Date): number {
+export function isoWeek(date: Date): { week: number; year: number } {
 	const thursday = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
 	thursday.setUTCDate(thursday.getUTCDate() + 4 - (thursday.getUTCDay() || 7));
 	const yearStart = Date.UTC(thursday.getUTCFullYear(), 0, 1);
-	return Math.ceil(((thursday.getTime() - yearStart) / DAY_MS + 1) / 7);
+	const week = Math.ceil(((thursday.getTime() - yearStart) / DAY_MS + 1) / 7);
+	return { week, year: thursday.getUTCFullYear() };
 }
 
 // A draft goes out the week after it is created, so it is named after that week.
 export function draftSubject(now: Date): string {
-	return `Nyhetsbrev vecka ${isoWeek(new Date(now.getTime() + 7 * DAY_MS))}`;
+	const { week, year } = isoWeek(new Date(now.getTime() + 7 * DAY_MS));
+	return `Nyhetsbrev vecka ${week} ${year}`;
 }
 
 export const withEntries = {
@@ -85,7 +87,7 @@ export async function addOwnPostToDraft(post: OwnPost): Promise<void> {
 					title: post.title,
 					link: post.url,
 					summary: post.text,
-					source: 'Eget inlägg'
+					source: 'Från redaktören'
 				}
 			}
 		}
@@ -106,5 +108,29 @@ export async function markSent(id: string, now = new Date()): Promise<void> {
 		if (!nextDraft) {
 			await tx.newsletter.create({ data: { subject: draftSubject(now) } });
 		}
+	});
+}
+
+export const ISSUES_PER_PAGE = 12;
+
+export async function countSentIssues(): Promise<number> {
+	return db.newsletter.count({ where: { status: 'SENT' } });
+}
+
+export async function listSentIssues(page: number) {
+	return db.newsletter.findMany({
+		where: { status: 'SENT' },
+		select: {
+			id: true,
+			subject: true,
+			sentAt: true,
+			entries: {
+				select: { id: true, title: true, link: true, source: true },
+				orderBy: { position: 'asc' }
+			}
+		},
+		orderBy: [{ sentAt: 'desc' }, { id: 'desc' }],
+		skip: (page - 1) * ISSUES_PER_PAGE,
+		take: ISSUES_PER_PAGE
 	});
 }

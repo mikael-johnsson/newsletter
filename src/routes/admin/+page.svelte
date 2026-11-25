@@ -22,7 +22,7 @@
 	const tabs: { id: Tab; label: string }[] = [
 		{ id: 'jobs', label: 'Jobb' },
 		{ id: 'articles', label: 'Artiklar' },
-		{ id: 'own', label: 'Eget inlägg' }
+		{ id: 'own', label: 'Från redaktören' }
 	];
 
 	let tab = $state<Tab>('jobs');
@@ -41,6 +41,12 @@
 
 <header class="flex flex-wrap items-center justify-end gap-4 p-4 sm:p-8">
 	<a
+		href={resolve('/admin/issues')}
+		class="rounded-pill bg-ink/5 px-6 py-2 font-display text-h2 text-ink focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink sm:p-4"
+	>
+		Utskick
+	</a>
+	<a
 		href={resolve('/admin/subscribers')}
 		class="rounded-pill bg-ink/5 px-6 py-2 font-display text-h2 text-ink focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink sm:p-4"
 	>
@@ -48,7 +54,7 @@
 	</a>
 	<form method="POST" action="?/logout" use:enhance>
 		<button
-			class="rounded-pill bg-primary px-6 py-2 font-display text-h2 text-ink focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink sm:p-4"
+			class="rounded-pill bg-primary px-6 py-2 font-display text-h2 text-ink hover:cursor-pointer focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink sm:p-4"
 		>
 			Sign out
 		</button>
@@ -75,7 +81,7 @@
 			>
 				<button
 					disabled={sendingTest || data.draft.entries.length === 0}
-					class="rounded-pill bg-ink px-6 py-2 font-bold text-paper focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink disabled:opacity-50"
+					class="rounded-pill bg-ink px-6 py-2 font-bold text-paper hover:cursor-pointer focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink disabled:opacity-50"
 				>
 					{sendingTest ? 'Skickar…' : 'Skicka testmejl'}
 				</button>
@@ -103,7 +109,7 @@
 					<form method="POST" action="?/schedule" use:enhance class="mt-4 flex flex-col gap-4">
 						<p>Brevet går till alla bekräftade prenumeranter och kan inte ångras.</p>
 						<button
-							class="w-fit rounded-pill bg-ink px-6 py-2 font-bold text-paper focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink"
+							class="w-fit rounded-pill bg-ink px-6 py-2 font-bold text-paper hover:cursor-pointer focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink"
 						>
 							Ja, skicka till alla
 						</button>
@@ -132,7 +138,7 @@
 						onclick={() => (tab = id)}
 						onkeydown={moveTab}
 						class={[
-							'rounded-pill px-6 py-2 font-display text-h2 focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink',
+							'rounded-pill px-6 py-2 font-display text-h2 hover:cursor-pointer focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink',
 							tab === id ? 'bg-ink text-paper' : 'bg-ink/5 text-ink'
 						]}
 					>
@@ -160,7 +166,7 @@
 						/>
 					</label>
 					<button
-						class="rounded-pill bg-ink px-6 py-2 font-bold text-paper focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink"
+						class="rounded-pill bg-ink px-6 py-2 font-bold text-paper hover:cursor-pointer focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink"
 					>
 						Sök
 					</button>

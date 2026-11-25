@@ -7,6 +7,7 @@ import {
 	RESEND_API_KEY
 } from '$app/env/private';
 import type { RenderedIssue } from './issue-email.ts';
+import { colors, fonts } from '../design.ts';
 
 export type Email = {
 	to: string;
@@ -107,11 +108,11 @@ export async function sendConfirmation(to: string, confirmUrl: string): Promise<
 		].join('\n'),
 		html: `<!doctype html>
 <html lang="sv">
-<body style="margin:0;padding:24px;background:#FFF8EE;color:#141414;font-family:Inter,Arial,sans-serif;font-size:18px;line-height:1.5">
+<body style="margin:0;padding:24px;background:${colors.paper};color:${colors.ink};font-family:${fonts.sans};font-size:18px;line-height:1.5">
 <p>Hej!</p>
 <p>Klicka på knappen för att bekräfta att du vill få Push to Main en gång i veckan.</p>
-<p><a href="${confirmUrl}" style="display:inline-block;padding:12px 20px;background:#FF4D2E;color:#141414;font-weight:700;text-decoration:none;border-radius:8px">Bekräfta prenumerationen</a></p>
-<p style="color:#6B6459;font-size:15px">Har du inte anmält dig? Då kan du ignorera det här mejlet.</p>
+<p><a href="${confirmUrl}" style="display:inline-block;padding:12px 20px;background:${colors.primary};color:${colors.ink};font-weight:700;text-decoration:none;border-radius:8px">Bekräfta prenumerationen</a></p>
+<p style="color:${colors.muted};font-size:15px">Har du inte anmält dig? Då kan du ignorera det här mejlet.</p>
 </body>
 </html>`,
 		idempotencyKey: `confirm/${confirmUrl}`

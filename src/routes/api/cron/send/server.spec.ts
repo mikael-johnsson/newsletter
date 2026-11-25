@@ -1,13 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { env, runSend } = vi.hoisted(() => ({
-	env: { CRON_SECRET: 'secret' as string | undefined },
+	env: {
+		CRON_SECRET: 'secret' as string | undefined,
+		SITE_URL: 'https://site.test' as string | undefined
+	},
 	runSend: vi.fn()
 }));
 
 vi.mock('$app/env/private', () => ({
 	get CRON_SECRET() {
 		return env.CRON_SECRET;
+	},
+	get SITE_URL() {
+		return env.SITE_URL;
 	}
 }));
 vi.mock('#lib/server/send-issue.ts', () => ({ runSend }));
@@ -24,6 +30,7 @@ function call(authorization?: string) {
 beforeEach(() => {
 	vi.clearAllMocks();
 	env.CRON_SECRET = 'secret';
+	env.SITE_URL = 'https://site.test';
 	runSend.mockResolvedValue(3);
 });
 
@@ -42,10 +49,17 @@ describe('GET /api/cron/send', () => {
 		expect(runSend).not.toHaveBeenCalled();
 	});
 
-	it('sends with the request’s origin and reports how many emails went out', async () => {
+	it('sends with SITE_URL, not the deployment URL Vercel calls, and reports how many went out', async () => {
 		const response = await call('Bearer secret');
 
 		expect(await response.json()).toEqual({ sent: 3 });
-		expect(runSend).toHaveBeenCalledWith('https://example.test', expect.any(Number));
+		expect(runSend).toHaveBeenCalledWith('https://site.test', expect.any(Number));
+	});
+
+	it('refuses to send when SITE_URL is not set', async () => {
+		env.SITE_URL = undefined;
+
+		expect((await call('Bearer secret')).status).toBe(500);
+		expect(runSend).not.toHaveBeenCalled();
 	});
 });

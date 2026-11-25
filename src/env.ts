@@ -41,6 +41,11 @@ export const variables = defineEnvVars({
 		description: 'Resend API key (sending access is enough); needed unless MAIL_SEND=off',
 		schema: (value) => value || undefined
 	},
+	SITE_URL: {
+		description:
+			'Public address of the site, e.g. `https://example.se`; links in issues sent by /api/cron/send point here',
+		schema: (value) => (value ? new URL(value).origin : undefined)
+	},
 	RESEND_WEBHOOK_SECRET: {
 		description:
 			'Signing secret (`whsec_…`) of the Resend webhook; without it /api/webhooks/resend refuses every call',
