@@ -15,9 +15,9 @@
 	</a>
 </header>
 
-<main class="mx-auto max-w-prose px-4 py-16">
+<main class="mx-auto w-120 px-4 py-16 sm:w-150 md:w-220">
 	<h1 class="font-display text-h2 sm:text-display">Nyhetsbrevet Push to Main</h1>
-	<p class="mt-8 text-body">
+	<p class="mt-8 w-120 text-body sm:w-150">
 		Korta nyheter och jobbannonser anpassade för din plats i karriären. Brevet kommer en gång i
 		veckan - aldrig oftare.
 	</p>
@@ -37,7 +37,7 @@
 				value={form?.email ?? ''}
 				aria-invalid={form?.error ? 'true' : undefined}
 				aria-describedby={form?.error ? 'email-error' : undefined}
-				class="rounded-sm border-0 bg-ink/5 px-4 py-2 text-body focus:ring-4 focus:ring-ink"
+				class="w-120 rounded-sm border-0 bg-ink/5 px-4 py-2 text-body focus:ring-4 focus:ring-ink"
 			/>
 
 			{#if form?.error}
