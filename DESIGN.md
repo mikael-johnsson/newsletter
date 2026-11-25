@@ -58,6 +58,8 @@ components:
 
 Bold and playful: the newsletter should feel like a zine someone was excited to make, not a SaaS dashboard. Big type, confident color, a bit of mischief. These tokens are a starting point; a designer owns them.
 
+Colors and fonts are set in code in `src/lib/design.ts`, which feeds both Tailwind and the email HTML. Change them there and keep this file in sync.
+
 ## Colors
 
 Warm paper background, near-black ink. One loud color per screen (primary or secondary), with accent for small highlights. Never all three at full size together.
