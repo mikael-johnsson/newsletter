@@ -186,7 +186,7 @@ describe('addOwnPostToDraft', () => {
 				title: 'Veckans tips',
 				link: null,
 				summary: 'Hej!',
-				source: 'Eget inlägg'
+				source: 'Från redaktören'
 			}
 		});
 	});

@@ -91,14 +91,14 @@ describe('admin content tabs', () => {
 		await expect.element(articles).toHaveFocus();
 	});
 
-	it('wraps around from the first tab to Eget inlägg', async () => {
+	it('wraps around from the first tab to Från redaktören', async () => {
 		const screen = await render(Page, props);
 
 		(screen.getByRole('tab', { name: 'Jobb' }).element() as HTMLElement).focus();
 		await userEvent.keyboard('{ArrowLeft}');
 
 		await expect
-			.element(screen.getByRole('tab', { name: 'Eget inlägg' }))
+			.element(screen.getByRole('tab', { name: 'Från redaktören' }))
 			.toHaveAttribute('aria-selected', 'true');
 		await expect.element(screen.getByLabelText('Titel')).toBeVisible();
 	});
@@ -143,7 +143,7 @@ describe('admin test email', () => {
 							title: 'Hej läsare',
 							link: null,
 							summary: 'Välkommen.',
-							source: 'Eget inlägg',
+							source: 'Från redaktören',
 							jobAd: null
 						}
 					]

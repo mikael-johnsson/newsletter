@@ -6,8 +6,8 @@ type Entry = Issue['entries'][number];
 
 const sections: { type: Entry['type']; heading: string }[] = [
 	{ type: 'ARTICLE', heading: 'Läsvärt!' },
-	{ type: 'AD', heading: 'Annonser' },
-	{ type: 'FREEHAND', heading: 'Annat...' }
+	{ type: 'AD', heading: 'Jobb!' },
+	{ type: 'FREEHAND', heading: 'Lite annat...' }
 ];
 
 export type RenderedIssue = {

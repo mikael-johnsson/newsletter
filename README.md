@@ -32,7 +32,7 @@ Go to `/login`, enter the admin password and press the button. You stay logged i
 
 On the left you see this week's draft: its name ("Nyhetsbrev vecka N") and everything you've added so far, in the order it will appear in the email. If it's empty, it says so.
 
-On the right are three tabs with things you can add: **Jobb**, **Artiklar** and **Eget inlägg**.
+On the right are three tabs with things you can add: **Jobb**, **Artiklar** and **Från redaktören**.
 
 ### 3. Add job ads (Jobb)
 
@@ -48,9 +48,9 @@ On the right are three tabs with things you can add: **Jobb**, **Artiklar** and 
 
 If a site can't be reached, a message at the top says which one. The other sites still show.
 
-### 5. Write your own post (Eget inlägg)
+### 5. Write your own post (Från redaktören)
 
-1. Open the **Eget inlägg** tab.
+1. Open the **Från redaktören** tab.
 2. Fill in a **Titel** and a **Text**. **Länk** is optional: add a web address if the post should point somewhere.
 3. Check the preview below the form; it shows how the post will look.
 4. Press **+** to add the post to the draft.

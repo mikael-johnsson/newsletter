@@ -87,7 +87,7 @@ export async function addOwnPostToDraft(post: OwnPost): Promise<void> {
 					title: post.title,
 					link: post.url,
 					summary: post.text,
-					source: 'Eget inlägg'
+					source: 'Från redaktören'
 				}
 			}
 		}

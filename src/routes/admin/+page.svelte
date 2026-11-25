@@ -22,7 +22,7 @@
 	const tabs: { id: Tab; label: string }[] = [
 		{ id: 'jobs', label: 'Jobb' },
 		{ id: 'articles', label: 'Artiklar' },
-		{ id: 'own', label: 'Eget inlägg' }
+		{ id: 'own', label: 'Från redaktören' }
 	];
 
 	let tab = $state<Tab>('jobs');

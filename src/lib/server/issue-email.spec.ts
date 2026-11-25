@@ -12,7 +12,7 @@ function entry(fields: Partial<Entry>): Entry {
 		title: 'Titel',
 		link: null,
 		summary: 'Sammanfattning',
-		source: 'Eget inlägg',
+		source: 'Från redaktören',
 		jobAd: null,
 		createdAt: new Date(),
 		updatedAt: new Date(),
