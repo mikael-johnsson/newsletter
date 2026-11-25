@@ -18,8 +18,7 @@
 <main class="mx-auto w-120 px-4 py-16 sm:w-150 md:w-220">
 	<h1 class="font-display text-h2 sm:text-display">Nyhetsbrevet Push to Main</h1>
 	<p class="mt-8 w-120 text-body sm:w-150">
-		Korta nyheter och jobbannonser anpassade för din plats i karriären. Brevet kommer en gång i
-		veckan - aldrig oftare.
+		Korta technyheter och relevanta jobbannonser. Brevet kommer en gång i veckan - aldrig oftare.
 	</p>
 	{#if form?.success}
 		<p role="status" class="mt-8 font-bold">
