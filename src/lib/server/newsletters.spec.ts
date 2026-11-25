@@ -48,7 +48,7 @@ const job: JobAd = {
 function draft(entries: { position: number; platsbankenId?: string }[] = []) {
 	return {
 		id: 'draft-1',
-		subject: 'Nyhetsbrev vecka 47',
+		subject: 'Nyhetsbrev vecka 47 2026',
 		status: 'DRAFT',
 		entries: entries.map(({ position, platsbankenId }) => ({
 			id: `entry-${position}`,
@@ -64,17 +64,17 @@ beforeEach(() => {
 
 describe('draftSubject', () => {
 	it('names the draft after the week it goes out, the week after it is created', () => {
-		expect(draftSubject(new Date('2026-11-10T12:00:00Z'))).toBe('Nyhetsbrev vecka 47');
+		expect(draftSubject(new Date('2026-11-10T12:00:00Z'))).toBe('Nyhetsbrev vecka 47 2026');
 	});
 
 	it('rolls over into week 1 of the next year', () => {
-		expect(draftSubject(new Date('2026-12-31T12:00:00Z'))).toBe('Nyhetsbrev vecka 1');
+		expect(draftSubject(new Date('2026-12-31T12:00:00Z'))).toBe('Nyhetsbrev vecka 1 2027');
 	});
 });
 
 describe('isoWeek', () => {
 	it('puts early January in the previous year’s last week when the ISO calendar does', () => {
-		expect(isoWeek(new Date('2021-01-01T12:00:00Z'))).toBe(53);
+		expect(isoWeek(new Date('2021-01-01T12:00:00Z'))).toEqual({ week: 53, year: 2020 });
 	});
 });
 
@@ -91,7 +91,7 @@ describe('getCurrentDraft', () => {
 
 		await getCurrentDraft(new Date('2026-11-10T12:00:00Z'));
 
-		expect(create.mock.calls[0][0].data).toEqual({ subject: 'Nyhetsbrev vecka 47' });
+		expect(create.mock.calls[0][0].data).toEqual({ subject: 'Nyhetsbrev vecka 47 2026' });
 	});
 });
 
@@ -221,7 +221,7 @@ describe('markSent', () => {
 			where: { id: 'draft-1' },
 			data: { status: 'SENT', sentAt: now }
 		});
-		expect(create.mock.calls[0][0].data).toEqual({ subject: 'Nyhetsbrev vecka 48' });
+		expect(create.mock.calls[0][0].data).toEqual({ subject: 'Nyhetsbrev vecka 48 2026' });
 	});
 
 	it('does not create a second draft when one already exists', async () => {
