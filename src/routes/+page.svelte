@@ -45,7 +45,7 @@
 			{/if}
 
 			<button
-				class="self-start rounded-pill bg-primary px-6 py-2 font-display text-h2 text-ink focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink sm:p-4"
+				class="self-start rounded-pill bg-primary px-6 py-2 font-display text-h2 text-ink hover:cursor-pointer focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink sm:p-4"
 			>
 				Prenumerera
 			</button>
