@@ -41,6 +41,12 @@
 
 <header class="flex flex-wrap items-center justify-end gap-4 p-4 sm:p-8">
 	<a
+		href={resolve('/admin/issues')}
+		class="rounded-pill bg-ink/5 px-6 py-2 font-display text-h2 text-ink focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink sm:p-4"
+	>
+		Utskick
+	</a>
+	<a
 		href={resolve('/admin/subscribers')}
 		class="rounded-pill bg-ink/5 px-6 py-2 font-display text-h2 text-ink focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-ink sm:p-4"
 	>

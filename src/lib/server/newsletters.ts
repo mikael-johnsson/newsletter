@@ -110,3 +110,27 @@ export async function markSent(id: string, now = new Date()): Promise<void> {
 		}
 	});
 }
+
+export const ISSUES_PER_PAGE = 12;
+
+export async function countSentIssues(): Promise<number> {
+	return db.newsletter.count({ where: { status: 'SENT' } });
+}
+
+export async function listSentIssues(page: number) {
+	return db.newsletter.findMany({
+		where: { status: 'SENT' },
+		select: {
+			id: true,
+			subject: true,
+			sentAt: true,
+			entries: {
+				select: { id: true, title: true, link: true, source: true },
+				orderBy: { position: 'asc' }
+			}
+		},
+		orderBy: [{ sentAt: 'desc' }, { id: 'desc' }],
+		skip: (page - 1) * ISSUES_PER_PAGE,
+		take: ISSUES_PER_PAGE
+	});
+}
