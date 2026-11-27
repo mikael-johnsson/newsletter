@@ -15,7 +15,9 @@ export function isValidEmail(email: string): boolean {
 // Every path that doesn't throw looks the same to the caller, so the form never reveals who is on the list.
 export async function subscribe(email: string, origin: string): Promise<void> {
 	const existing = await db.subscriber.findUnique({ where: { email } });
-	if (existing?.confirmedAt && !existing.unsubscribedAt && !existing.bouncedAt) return;
+	if (existing?.confirmedAt && !existing.unsubscribedAt && !existing.bouncedAt) {
+		return sendAlreadySubscribed(email, `${origin}/unsubscribe/${existing.unsubscribeToken}`);
+	}
 
 	let token = existing?.confirmToken;
 	if (!existing) {

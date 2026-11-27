@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from './db.ts';
-import { sendConfirmation } from './mail.ts';
+import { sendAlreadySubscribed, sendConfirmation } from './mail.ts';
 import {
 	confirmSubscription,
 	isValidEmail,
@@ -12,7 +12,7 @@ import {
 vi.mock('./db.ts', () => ({
 	db: { subscriber: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() } }
 }));
-vi.mock('./mail.ts', () => ({ sendConfirmation: vi.fn() }));
+vi.mock('./mail.ts', () => ({ sendConfirmation: vi.fn(), sendAlreadySubscribed: vi.fn() }));
 
 const findUnique = vi.mocked(db.subscriber.findUnique);
 const create = vi.mocked(db.subscriber.create);
@@ -88,7 +88,7 @@ describe('subscribe', () => {
 		expect(send).toHaveBeenCalledWith(email, `${origin}/confirm/old-token`);
 	});
 
-	it('does nothing for a confirmed subscriber', async () => {
+	it('tells a confirmed subscriber they are already on the list, without writing', async () => {
 		findUnique.mockResolvedValue(subscriber({ confirmedAt: new Date() }));
 
 		await subscribe(email, origin);
@@ -96,6 +96,7 @@ describe('subscribe', () => {
 		expect(create).not.toHaveBeenCalled();
 		expect(update).not.toHaveBeenCalled();
 		expect(send).not.toHaveBeenCalled();
+		expect(sendAlreadySubscribed).toHaveBeenCalledWith(email, `${origin}/unsubscribe/unsub`);
 	});
 
 	it('makes a returning unsubscriber confirm again with a new link', async () => {
