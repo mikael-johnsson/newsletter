@@ -118,3 +118,28 @@ export async function sendConfirmation(to: string, confirmUrl: string): Promise<
 		idempotencyKey: `confirm/${confirmUrl}`
 	});
 }
+
+// Keyed on the unsubscribe link, so repeated sign-ups send at most one email per 24 hours.
+export async function sendAlreadySubscribed(to: string, unsubscribeUrl: string): Promise<void> {
+	await send({
+		to,
+		subject: 'Du prenumererar redan på Push to Main',
+		text: [
+			'Hej!',
+			'',
+			'Någon (förhoppningsvis du) försökte anmäla den här adressen, men du får redan Push to Main varje vecka. Du behöver inte göra något.',
+			'',
+			'Vill du sluta få nyhetsbrevet? Avsluta prenumerationen här:',
+			unsubscribeUrl
+		].join('\n'),
+		html: `<!doctype html>
+<html lang="sv">
+<body style="margin:0;padding:24px;background:${colors.paper};color:${colors.ink};font-family:${fonts.sans};font-size:18px;line-height:1.5">
+<p>Hej!</p>
+<p>Någon (förhoppningsvis du) försökte anmäla den här adressen, men du får redan Push to Main varje vecka. Du behöver inte göra något.</p>
+<p style="color:${colors.muted};font-size:15px">Vill du sluta få nyhetsbrevet? <a href="${unsubscribeUrl}" style="color:${colors.ink}">Avsluta prenumerationen</a></p>
+</body>
+</html>`,
+		idempotencyKey: `already-subscribed/${unsubscribeUrl}`
+	});
+}

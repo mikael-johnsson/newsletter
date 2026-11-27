@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { db } from './db.ts';
-import { sendConfirmation } from './mail.ts';
+import { sendAlreadySubscribed, sendConfirmation } from './mail.ts';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@.]+$/;
 
